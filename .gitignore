@@ -16,6 +16,7 @@ releases/
 out/
 screenshots/
 recordings/
+.codex-previews/
 *.mp4
 *.mov
 *.webm
