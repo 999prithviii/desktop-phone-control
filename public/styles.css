@@ -52,11 +52,13 @@
 }
 
 :root[data-accent="mint"] {
-  --accent: #39ff88;
-  --accent-2: #ff6b35;
-  --accent-3: #ffe156;
-  --accent-soft: rgba(57, 255, 136, 0.16);
-  --active-bg: #1f3b2c;
+  --accent: #35e6c1;
+  --accent-2: #a8f06a;
+  --accent-3: #d8b4ff;
+  --accent-soft: rgba(53, 230, 193, 0.16);
+  --active-bg: rgba(53, 230, 193, 0.18);
+  --line: rgba(53, 230, 193, 0.3);
+  --artwork: url("/art/mint.svg");
 }
 
 :root[data-accent="coral"] {
@@ -119,7 +121,20 @@
 }
 
 :root[data-theme="light"][data-accent="mint"] {
-  --active-bg: #d8f8e1;
+  --bg: #f4fbf4;
+  --bg-top: #fffdf8;
+  --panel: rgba(255, 255, 255, 0.68);
+  --panel-2: rgba(238, 252, 246, 0.78);
+  --panel-3: rgba(230, 248, 239, 0.62);
+  --input-bg: rgba(255, 255, 255, 0.82);
+  --pad-bg-1: rgba(246, 255, 250, 0.92);
+  --pad-bg-2: rgba(219, 249, 239, 0.86);
+  --button-bg: rgba(255, 255, 255, 0.74);
+  --button-hover: rgba(226, 251, 240, 0.9);
+  --text: #16312c;
+  --muted: #55756d;
+  --line: rgba(43, 176, 149, 0.34);
+  --active-bg: rgba(53, 230, 193, 0.2);
 }
 
 :root[data-theme="light"][data-accent="coral"] {
@@ -162,6 +177,7 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
+:root[data-accent="mint"] body,
 :root[data-accent="sun"] body,
 :root[data-accent="future"] body {
   background:
