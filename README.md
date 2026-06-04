@@ -4,7 +4,7 @@ Local-first phone controller for a Windows desktop.
 
 Built by Prithvi — Designer & Builder  
 GitHub: [@999prithviii](https://github.com/999prithviii)  
-Version: `0.1.22`
+Version: `0.1.23`
 
 This MVP turns your phone browser into a touchpad and keyboard for your laptop. It is designed for same-Wi-Fi use only.
 

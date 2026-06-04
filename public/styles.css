@@ -29,10 +29,12 @@
   --glass-highlight: rgba(255, 255, 255, 0.22);
   --glass-edge: rgba(255, 255, 255, 0.16);
   --blur: blur(18px) saturate(1.25);
-  --radius-panel: 8px;
-  --radius-field: 18px;
+  --cluster-gap: 12px;
+  --tile-gap: 12px;
+  --radius-panel: 30px;
+  --radius-field: 22px;
   --radius-pill: 999px;
-  --radius-pad: 28px;
+  --radius-pad: 30px;
 }
 
 :root[data-theme="light"] {
@@ -257,21 +259,6 @@ body {
   background-size: auto, cover, 28px 28px, 28px 28px, auto;
 }
 
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0 0 auto;
-  height: 6px;
-  background: repeating-linear-gradient(
-    90deg,
-    var(--accent) 0 42px,
-    var(--accent-2) 42px 84px,
-    var(--accent-3) 84px 126px
-  );
-  pointer-events: none;
-  z-index: 20;
-}
-
 button,
 input,
 select {
@@ -281,7 +268,7 @@ select {
 .shell {
   width: min(720px, 100%);
   margin: 0 auto;
-  padding: 16px;
+  padding: 14px;
   position: relative;
   z-index: 1;
 }
@@ -289,15 +276,20 @@ select {
 .panel,
 #controlPanel {
   background: var(--panel);
-  border: 2px solid var(--line);
+  border: 1px solid var(--line);
   border-radius: var(--radius-panel);
-  padding: 16px;
+  padding: 14px;
   box-shadow:
     inset 0 1px 0 var(--glass-highlight),
     inset 0 -1px 0 rgba(0, 0, 0, 0.08),
     var(--shadow);
   backdrop-filter: var(--blur);
   -webkit-backdrop-filter: var(--blur);
+}
+
+#controlPanel:not(.hidden) {
+  display: grid;
+  gap: var(--cluster-gap);
 }
 
 h1 {
@@ -313,14 +305,14 @@ p {
 }
 
 .hidden {
-  display: none;
+  display: none !important;
 }
 
 .pair-form,
 .text-row {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 10px;
+  gap: var(--tile-gap);
 }
 
 input,
@@ -399,7 +391,7 @@ button.active {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 14px;
+  margin-bottom: 0;
 }
 
 .topbar strong {
@@ -418,8 +410,8 @@ button.active {
 .theme-bar {
   display: grid;
   grid-template-columns: 96px 1fr;
-  gap: 10px;
-  margin: -4px 0 14px;
+  gap: var(--tile-gap);
+  margin: 0;
   padding: 10px;
   border: 1px solid var(--line);
   border-radius: var(--radius-field);
@@ -432,7 +424,9 @@ button.active {
 }
 
 .stream-panel {
-  margin-bottom: 12px;
+  display: grid;
+  gap: var(--tile-gap);
+  margin: 0;
 }
 
 .video-frame {
@@ -481,23 +475,23 @@ button.active {
 .shortcut-row {
   display: grid;
   grid-template-columns: minmax(140px, 1fr) minmax(160px, 1fr) auto;
-  gap: 10px;
+  gap: var(--tile-gap);
   align-items: center;
 }
 
 .shortcut-list {
   display: grid;
-  gap: 10px;
-  margin-top: 12px;
+  gap: var(--tile-gap);
+  margin-top: 0;
 }
 
 .shortcut-editor {
   display: grid;
-  gap: 10px;
-  margin: 10px 0;
-  padding: 12px;
-  border: 2px solid var(--line);
-  border-radius: var(--radius-field);
+  gap: var(--tile-gap);
+  margin: 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pad);
   background: var(--panel-3);
   box-shadow:
     inset 0 1px 0 var(--glass-highlight),
@@ -522,22 +516,29 @@ button.active {
 .app-credit {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 12px;
+  gap: 8px 14px;
   justify-content: center;
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 2px solid var(--line);
+  margin-top: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--panel-3);
   color: var(--muted);
   font-size: 12px;
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    var(--control-shadow);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
 }
 
 .slider-row {
   display: grid;
   grid-template-columns: auto minmax(120px, 1fr) 44px;
   align-items: center;
-  gap: 10px;
+  gap: var(--tile-gap);
   min-height: 42px;
-  margin: 4px 0 10px;
+  margin: 0;
   color: var(--muted);
   font-size: 13px;
 }
@@ -565,7 +566,7 @@ button.active {
   -webkit-user-select: none;
   -webkit-touch-callout: none;
   touch-action: none;
-  margin-bottom: 0;
+  margin: 0;
   box-shadow:
     inset 0 1px 0 var(--glass-highlight),
     inset 0 -26px 60px rgba(255, 255, 255, 0.04),
@@ -577,8 +578,8 @@ button.active {
 .mouse-buttons {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  margin-bottom: 12px;
-  gap: 10px;
+  margin: 0;
+  gap: var(--tile-gap);
   border-radius: var(--radius-pill);
   user-select: none;
   -webkit-user-select: none;
@@ -613,8 +614,8 @@ button.active {
 
 .grid {
   display: grid;
-  gap: 10px;
-  margin: 10px 0;
+  gap: var(--tile-gap);
+  margin: 0;
 }
 
 .two {
