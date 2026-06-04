@@ -6,6 +6,12 @@ Built by Prithvi — Designer & Builder
 GitHub: [@999prithviii](https://github.com/999prithviii)  
 Version: `0.1.25`
 
+## Status
+
+This project is in **pre-release alpha**.
+
+It is an early private build for testing and iteration. Expect rough edges, UI changes, bugs, and missing installer polish. Do not treat this as a finished public product yet.
+
 This MVP turns your phone browser into a touchpad and keyboard for your laptop. It is designed for same-Wi-Fi use only.
 
 ## Features
@@ -27,6 +33,24 @@ This MVP turns your phone browser into a touchpad and keyboard for your laptop. 
 - Text typing.
 - Browser/search helper: focus address bar, type, press Enter.
 - Common keys: Escape, Space, Enter, `F`, `F11`, media play/pause, volume.
+
+## Beginner Explanation
+
+Desktop Phone Control lets you use your phone like a small remote control for your Windows laptop.
+
+What it does:
+
+- Your laptop runs the desktop controller.
+- Your phone opens a local web app in the browser.
+- After pairing, your phone can move the mouse, click, scroll, type text, run shortcuts, and connect to a live screen stream.
+- Shortcut menus can be arranged into modes like Core, Browser, Media / Spotify, and Edit / DaVinci.
+
+Important:
+
+- This works on the same Wi-Fi network only.
+- The app is not meant to be exposed online.
+- Closing the terminal stops the controller.
+- Restarting the app creates fresh private pairing/admin/stream links.
 
 ## Run
 
