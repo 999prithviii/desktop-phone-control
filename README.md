@@ -4,7 +4,7 @@ Local-first phone controller for a Windows desktop.
 
 Built by Prithvi — Designer & Builder  
 GitHub: [@999prithviii](https://github.com/999prithviii)  
-Version: `0.1.23`
+Version: `0.1.24`
 
 This MVP turns your phone browser into a touchpad and keyboard for your laptop. It is designed for same-Wi-Fi use only.
 
@@ -13,6 +13,7 @@ This MVP turns your phone browser into a touchpad and keyboard for your laptop. 
 - Pairing code printed in the desktop terminal.
 - Live screen stream through browser WebRTC screen sharing.
 - Desktop shortcut manager for phone buttons.
+- Draggable accordion shortcut trays for compact app-specific controls.
 - Light/dark mode plus Mint, Coral, Sun, Future, Cyan, and Pink accent variants.
 - Phone touchpad for cursor movement.
 - Adjustable mouse sensitivity from `0.8x` to `5x`.

@@ -69,27 +69,7 @@
           <button data-mouse-button="right" type="button" aria-label="Right mouse button"></button>
         </section>
 
-        <section class="grid two">
-          <button id="holdLeft" type="button">Hold Left</button>
-          <button data-key="esc" type="button">Esc</button>
-        </section>
-
-        <section class="grid three">
-          <button data-scroll="420" type="button">Scroll Up</button>
-          <button data-key="space" type="button">Space</button>
-          <button data-scroll="-420" type="button">Scroll Down</button>
-        </section>
-
-        <section class="grid four">
-          <button data-key="f" type="button">Video Fullscreen</button>
-          <button data-key="f11" type="button">Browser Fullscreen</button>
-          <button data-key="playpause" type="button">Play/Pause</button>
-          <button data-key="mute" type="button">Mute</button>
-        </section>
-
-        <section id="shortcutPanel" class="shortcut-panel hidden" aria-label="Custom shortcuts">
-          <div id="phoneShortcuts" class="grid two"></div>
-        </section>
+        <section id="shortcutDeck" class="shortcut-deck" aria-label="Shortcut menus"></section>
 
         <section id="shortcutEditor" class="shortcut-editor hidden" aria-label="Edit shortcuts">
           <header class="section-head">
@@ -105,26 +85,20 @@
           <button id="saveShortcuts" type="button">Save Shortcuts</button>
         </section>
 
-        <form id="searchForm" class="text-row">
+        <form id="searchForm" class="text-row hidden">
           <input id="searchText" autocomplete="off" placeholder="Search or open URL">
           <button type="submit">Go</button>
         </form>
 
-        <form id="typeForm" class="text-row">
+        <form id="typeForm" class="text-row hidden">
           <input id="typeText" autocomplete="off" placeholder="Type text into focused app">
           <button type="submit">Type</button>
         </form>
 
-        <section class="grid three">
-          <button data-key="volumedown" type="button">Vol -</button>
-          <button data-key="volumeup" type="button">Vol +</button>
-          <button data-key="enter" type="button">Enter</button>
-        </section>
-
         <footer class="app-credit">
           <span>Built by Prithvi</span>
           <span>Designer &amp; Builder</span>
-          <span>v0.1.23</span>
+          <span>v0.1.24</span>
         </footer>
       </section>
     </main>

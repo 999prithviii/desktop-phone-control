@@ -513,6 +513,114 @@ button.active {
   color: var(--text);
 }
 
+.shortcut-deck {
+  display: grid;
+  gap: var(--tile-gap);
+}
+
+.shortcut-tray {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pad);
+  background: var(--panel-3);
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    var(--control-shadow);
+  overflow: hidden;
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+}
+
+.shortcut-tray.is-open {
+  background:
+    radial-gradient(circle at 14% 0%, var(--glass-highlight), transparent 34%),
+    var(--panel-3);
+}
+
+.shortcut-tray.is-dragging {
+  opacity: 0.72;
+  transform: scale(0.985);
+}
+
+.shortcut-tray-header {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: 8px;
+  align-items: center;
+  padding: 8px;
+}
+
+.tray-drag-handle {
+  min-height: 44px;
+  padding: 0;
+  color: var(--muted);
+  cursor: grab;
+  touch-action: none;
+}
+
+.tray-drag-handle:active {
+  cursor: grabbing;
+}
+
+.shortcut-tray-toggle {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 10px;
+  align-items: center;
+  min-height: 44px;
+  width: 100%;
+  text-align: left;
+}
+
+.tray-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tray-meta {
+  min-width: 24px;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: right;
+}
+
+.tray-chevron {
+  color: var(--muted);
+  font-size: 13px;
+  transition: transform 140ms ease;
+}
+
+.shortcut-tray.is-open .tray-chevron {
+  transform: rotate(180deg);
+}
+
+.shortcut-tray-body {
+  padding: 0 10px 10px;
+}
+
+.tray-action-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--tile-gap);
+}
+
+.tray-action-grid button {
+  min-height: 50px;
+  white-space: normal;
+}
+
+.tray-stack {
+  display: grid;
+  gap: var(--tile-gap);
+}
+
+.tray-empty {
+  margin: 4px 4px 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .app-credit {
   display: flex;
   flex-wrap: wrap;
@@ -633,6 +741,10 @@ button.active {
 @media (min-width: 560px) {
   .four {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .tray-action-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 

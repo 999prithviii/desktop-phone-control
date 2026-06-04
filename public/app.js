@@ -4,7 +4,6 @@ const pairForm = document.querySelector("#pairForm");
 const pairCode = document.querySelector("#pairCode");
 const pairError = document.querySelector("#pairError");
 const pad = document.querySelector("#pad");
-const holdLeft = document.querySelector("#holdLeft");
 const panic = document.querySelector("#panic");
 const themeToggle = document.querySelector("#themeToggle");
 const accentSelect = document.querySelector("#accentSelect");
@@ -14,8 +13,7 @@ const stopStream = document.querySelector("#stopStream");
 const streamStatus = document.querySelector("#streamStatus");
 const sensitivity = document.querySelector("#sensitivity");
 const sensitivityValue = document.querySelector("#sensitivityValue");
-const shortcutPanel = document.querySelector("#shortcutPanel");
-const phoneShortcuts = document.querySelector("#phoneShortcuts");
+const shortcutDeck = document.querySelector("#shortcutDeck");
 const shortcutEditor = document.querySelector("#shortcutEditor");
 const shortcutEditorStatus = document.querySelector("#shortcutEditorStatus");
 const shortcutForm = document.querySelector("#shortcutForm");
@@ -44,7 +42,11 @@ let longPressTimer = null;
 let streamPeer = null;
 let remoteMediaStream = null;
 let shortcutPollTimer = null;
+let customShortcuts = [];
 let editableShortcuts = [];
+let shortcutTrayOrder = [];
+let openTrayId = "";
+let trayDrag = null;
 const adminToken = new URL(location.href).searchParams.get("admin") || "";
 
 const DEFAULT_MOVE_SPEED = 2.6;
@@ -53,6 +55,71 @@ const TAP_MAX_MS = 280;
 const TAP_MAX_DISTANCE = 14;
 const LONG_PRESS_MS = 450;
 const LONG_PRESS_MOVE_LIMIT = 10;
+const TRAY_ORDER_KEY = "deskctl:shortcutTrayOrder";
+const TRAY_OPEN_KEY = "deskctl:shortcutTrayOpenId";
+const DEFAULT_OPEN_TRAY = "core";
+const BUILT_IN_SHORTCUT_IDS = new Set(["address-bar", "copy", "paste", "save", "undo", "desktop"]);
+
+const trayPresets = [
+  {
+    id: "core",
+    title: "Core",
+    actions: [
+      { id: "hold-left", label: "Hold Left", type: "mouseToggle" },
+      { id: "esc", label: "Esc", type: "key", key: "esc" },
+      { id: "enter", label: "Enter", type: "key", key: "enter" },
+      { id: "desktop", label: "Show Desktop", type: "key", key: "win+d" }
+    ]
+  },
+  {
+    id: "scroll",
+    title: "Scroll",
+    actions: [
+      { id: "scroll-up", label: "Scroll Up", type: "scroll", amount: 420 },
+      { id: "space", label: "Space", type: "key", key: "space" },
+      { id: "scroll-down", label: "Scroll Down", type: "scroll", amount: -420 }
+    ]
+  },
+  {
+    id: "browser",
+    title: "Browser",
+    actions: [
+      { id: "address-bar", label: "Address Bar", type: "key", key: "ctrl+l" },
+      { id: "video-fullscreen", label: "Video Fullscreen", type: "key", key: "f" },
+      { id: "browser-fullscreen", label: "Browser Fullscreen", type: "key", key: "f11" }
+    ]
+  },
+  {
+    id: "media",
+    title: "Media / Spotify",
+    actions: [
+      { id: "playpause", label: "Play/Pause", type: "key", key: "playpause" },
+      { id: "mute", label: "Mute", type: "key", key: "mute" },
+      { id: "volumedown", label: "Vol -", type: "key", key: "volumedown" },
+      { id: "volumeup", label: "Vol +", type: "key", key: "volumeup" }
+    ]
+  },
+  {
+    id: "edit",
+    title: "Edit / DaVinci",
+    actions: [
+      { id: "copy", label: "Copy", type: "key", key: "ctrl+c" },
+      { id: "paste", label: "Paste", type: "key", key: "ctrl+v" },
+      { id: "save", label: "Save", type: "key", key: "ctrl+s" },
+      { id: "undo", label: "Undo", type: "key", key: "ctrl+z" }
+    ]
+  },
+  {
+    id: "text",
+    title: "Text",
+    actions: []
+  },
+  {
+    id: "custom",
+    title: "Custom",
+    actions: []
+  }
+];
 
 async function api(path, body = {}) {
   const response = await fetch(path, {
@@ -83,6 +150,270 @@ function createShortcutId() {
 
 async function adminApi(path, body = {}) {
   return api(path, { token: adminToken, ...body });
+}
+
+function getTrayDefinitions() {
+  const trays = trayPresets.map((tray) => ({ ...tray }));
+  if (adminToken) {
+    trays.push({ id: "admin", title: "Admin", actions: [] });
+  }
+  return trays;
+}
+
+function getDefaultTrayOrder() {
+  return getTrayDefinitions().map((tray) => tray.id);
+}
+
+function normalizeTrayOrder(value) {
+  const defaults = getDefaultTrayOrder();
+  const allowed = new Set(defaults);
+  const order = Array.isArray(value) ? value.filter((id) => allowed.has(id)) : [];
+  const unique = [...new Set(order)];
+  return [...unique, ...defaults.filter((id) => !unique.includes(id))];
+}
+
+function readTrayOrder() {
+  try {
+    return normalizeTrayOrder(JSON.parse(localStorage.getItem(TRAY_ORDER_KEY) || "[]"));
+  } catch {
+    return normalizeTrayOrder([]);
+  }
+}
+
+function saveTrayOrder() {
+  localStorage.setItem(TRAY_ORDER_KEY, JSON.stringify(shortcutTrayOrder));
+}
+
+function readOpenTrayId(order) {
+  const saved = localStorage.getItem(TRAY_OPEN_KEY);
+  if (saved && order.includes(saved)) return saved;
+  if (order.includes(DEFAULT_OPEN_TRAY)) return DEFAULT_OPEN_TRAY;
+  return order[0] || "";
+}
+
+function setOpenTray(id) {
+  if (!shortcutTrayOrder.includes(id)) return;
+  openTrayId = id;
+  localStorage.setItem(TRAY_OPEN_KEY, openTrayId);
+  renderShortcutDeck();
+}
+
+function setHoldLeftUi(labelOverride = "") {
+  document.querySelectorAll("[data-action-id='hold-left']").forEach((button) => {
+    button.classList.toggle("active", leftHeld || autoDrag);
+    button.textContent = labelOverride || (leftHeld ? "Release Left" : "Hold Left");
+  });
+}
+
+function getTrayById(id) {
+  return getTrayDefinitions().find((tray) => tray.id === id);
+}
+
+function getTrayActions(tray) {
+  if (tray.id === "custom") {
+    return customShortcuts
+      .filter((shortcut) => !BUILT_IN_SHORTCUT_IDS.has(shortcut.id))
+      .map((shortcut) => ({
+        id: shortcut.id,
+        label: shortcut.label,
+        title: shortcut.key,
+        type: "customShortcut",
+        shortcutId: shortcut.id
+      }));
+  }
+  return tray.actions;
+}
+
+function createTrayButton(action) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.dataset.actionId = action.id;
+  button.textContent = action.label;
+  if (action.title || action.key) button.title = action.title || action.key;
+
+  if (action.type === "mouseToggle") {
+    button.classList.toggle("active", leftHeld || autoDrag);
+    button.textContent = autoDrag ? "Dragging" : leftHeld ? "Release Left" : action.label;
+  }
+
+  button.addEventListener("click", async () => {
+    button.disabled = true;
+    try {
+      await runTrayAction(action);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      button.disabled = false;
+      setHoldLeftUi(autoDrag ? "Dragging" : "");
+    }
+  });
+
+  return button;
+}
+
+function createTrayBody(tray, actions) {
+  const body = document.createElement("div");
+  body.className = "shortcut-tray-body";
+
+  if (tray.id === "text") {
+    body.classList.add("tray-stack");
+    searchForm.classList.remove("hidden");
+    typeForm.classList.remove("hidden");
+    body.append(searchForm, typeForm);
+    return body;
+  }
+
+  if (tray.id === "admin") {
+    body.classList.add("tray-stack");
+    shortcutEditor.classList.remove("hidden");
+    body.append(shortcutEditor);
+    return body;
+  }
+
+  if (!actions.length) {
+    const empty = document.createElement("p");
+    empty.className = "tray-empty";
+    empty.textContent = tray.id === "custom" ? "No custom shortcuts yet." : "No shortcuts in this tray.";
+    body.append(empty);
+    return body;
+  }
+
+  const grid = document.createElement("div");
+  grid.className = "tray-action-grid";
+  for (const action of actions) {
+    grid.append(createTrayButton(action));
+  }
+  body.append(grid);
+  return body;
+}
+
+function startTrayDrag(event, trayElement) {
+  event.preventDefault();
+  trayDrag = { element: trayElement, pointerId: event.pointerId };
+  trayElement.classList.add("is-dragging");
+  event.currentTarget.setPointerCapture(event.pointerId);
+}
+
+function moveTrayDrag(event) {
+  if (!trayDrag) return;
+  event.preventDefault();
+
+  const dragging = trayDrag.element;
+  const siblings = [...shortcutDeck.querySelectorAll(".shortcut-tray:not(.is-dragging)")];
+  const before = siblings.find((item) => {
+    const rect = item.getBoundingClientRect();
+    return event.clientY < rect.top + rect.height / 2;
+  });
+
+  shortcutDeck.insertBefore(dragging, before || null);
+}
+
+function finishTrayDrag() {
+  if (!trayDrag) return;
+  trayDrag.element.classList.remove("is-dragging");
+  shortcutTrayOrder = [...shortcutDeck.querySelectorAll(".shortcut-tray")].map((tray) => tray.dataset.trayId);
+  shortcutTrayOrder = normalizeTrayOrder(shortcutTrayOrder);
+  saveTrayOrder();
+  trayDrag = null;
+}
+
+function renderShortcutDeck() {
+  if (!shortcutTrayOrder.length) {
+    shortcutTrayOrder = readTrayOrder();
+  } else {
+    shortcutTrayOrder = normalizeTrayOrder(shortcutTrayOrder);
+  }
+  if (!openTrayId || !shortcutTrayOrder.includes(openTrayId)) {
+    openTrayId = readOpenTrayId(shortcutTrayOrder);
+  }
+  localStorage.setItem(TRAY_OPEN_KEY, openTrayId);
+
+  shortcutDeck.innerHTML = "";
+
+  for (const id of shortcutTrayOrder) {
+    const tray = getTrayById(id);
+    if (!tray) continue;
+
+    const actions = getTrayActions(tray);
+    const isOpen = id === openTrayId;
+    const article = document.createElement("article");
+    article.className = `shortcut-tray${isOpen ? " is-open" : ""}`;
+    article.dataset.trayId = id;
+
+    const header = document.createElement("div");
+    header.className = "shortcut-tray-header";
+
+    const dragHandle = document.createElement("button");
+    dragHandle.type = "button";
+    dragHandle.className = "tray-drag-handle";
+    dragHandle.setAttribute("aria-label", `Drag ${tray.title} menu`);
+    dragHandle.textContent = "::";
+    dragHandle.addEventListener("pointerdown", (event) => startTrayDrag(event, article));
+    dragHandle.addEventListener("pointermove", moveTrayDrag);
+    dragHandle.addEventListener("pointerup", finishTrayDrag);
+    dragHandle.addEventListener("pointercancel", finishTrayDrag);
+    dragHandle.addEventListener("lostpointercapture", finishTrayDrag);
+
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "shortcut-tray-toggle";
+    toggle.setAttribute("aria-expanded", String(isOpen));
+    toggle.addEventListener("click", () => {
+      if (id === openTrayId) return;
+      setOpenTray(id);
+    });
+
+    const title = document.createElement("span");
+    title.className = "tray-title";
+    title.textContent = tray.title;
+
+    const meta = document.createElement("span");
+    meta.className = "tray-meta";
+    meta.textContent = tray.id === "text" || tray.id === "admin" ? "" : String(actions.length);
+
+    const chevron = document.createElement("span");
+    chevron.className = "tray-chevron";
+    chevron.textContent = "v";
+
+    toggle.append(title, meta, chevron);
+    header.append(dragHandle, toggle);
+    article.append(header);
+    if (isOpen) {
+      article.append(createTrayBody(tray, actions));
+    }
+    shortcutDeck.append(article);
+  }
+}
+
+async function runTrayAction(action) {
+  if (action.type === "key") {
+    await api("/api/key", { key: action.key });
+    return;
+  }
+  if (action.type === "scroll") {
+    await api("/api/scroll", { amount: action.amount });
+    return;
+  }
+  if (action.type === "customShortcut") {
+    await api("/api/shortcuts/run", { id: action.shortcutId });
+    return;
+  }
+  if (action.type === "mouseToggle") {
+    await toggleLeftHold();
+  }
+}
+
+async function toggleLeftHold() {
+  const nextState = !leftHeld;
+  leftHeld = nextState;
+  setHoldLeftUi();
+  try {
+    await api("/api/mouse", { button: "left", kind: nextState ? "down" : "up" });
+  } catch (error) {
+    leftHeld = !nextState;
+    setHoldLeftUi();
+    throw error;
+  }
 }
 
 function applyDisplaySettings() {
@@ -120,6 +451,7 @@ function showControls() {
   isPaired = true;
   pairPanel.classList.add("hidden");
   controlPanel.classList.remove("hidden");
+  renderShortcutDeck();
   void loadPhoneShortcuts();
   if (!shortcutPollTimer) {
     shortcutPollTimer = setInterval(() => {
@@ -127,33 +459,13 @@ function showControls() {
     }, 5000);
   }
   if (adminToken) {
-    shortcutEditor.classList.remove("hidden");
     void loadEditableShortcuts();
   }
 }
 
 function renderPhoneShortcuts(shortcuts) {
-  phoneShortcuts.innerHTML = "";
-  shortcutPanel.classList.toggle("hidden", !shortcuts.length);
-
-  for (const shortcut of shortcuts) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.textContent = shortcut.label;
-    button.title = shortcut.key;
-    button.addEventListener("click", async () => {
-      button.disabled = true;
-      try {
-        await api("/api/shortcuts/run", { id: shortcut.id });
-      } catch (error) {
-        console.error(error);
-      } finally {
-        button.disabled = false;
-      }
-    });
-
-    phoneShortcuts.append(button);
-  }
+  customShortcuts = shortcuts;
+  renderShortcutDeck();
 }
 
 async function loadPhoneShortcuts() {
@@ -411,14 +723,12 @@ function startLongPress() {
     if (gesture.distance > LONG_PRESS_MOVE_LIMIT) return;
 
     autoDrag = true;
-    holdLeft.classList.add("active");
-    holdLeft.textContent = "Dragging";
+    setHoldLeftUi("Dragging");
     try {
       await api("/api/mouse", { button: "left", kind: "down" });
     } catch (error) {
       autoDrag = false;
-      holdLeft.classList.remove("active");
-      holdLeft.textContent = "Hold Left";
+      setHoldLeftUi();
       console.error(error);
     }
   }, LONG_PRESS_MS);
@@ -461,8 +771,7 @@ async function releaseAutoDrag() {
   if (!autoDrag) return;
 
   autoDrag = false;
-  holdLeft.classList.remove("active");
-  holdLeft.textContent = "Hold Left";
+  setHoldLeftUi();
   try {
     await api("/api/mouse", { button: "left", kind: "up" });
   } catch (error) {
@@ -653,18 +962,6 @@ document.querySelectorAll("[data-mouse-button]").forEach((button) => {
   });
 });
 
-document.querySelectorAll("[data-scroll]").forEach((button) => {
-  button.addEventListener("click", async () => {
-    await api("/api/scroll", { amount: Number(button.dataset.scroll) });
-  });
-});
-
-document.querySelectorAll("[data-key]").forEach((button) => {
-  button.addEventListener("click", async () => {
-    await api("/api/key", { key: button.dataset.key });
-  });
-});
-
 connectStream.addEventListener("click", () => {
   void connectToStream();
 });
@@ -691,19 +988,11 @@ saveShortcuts.addEventListener("click", () => {
   void saveEditableShortcuts();
 });
 
-holdLeft.addEventListener("click", async () => {
-  leftHeld = !leftHeld;
-  holdLeft.classList.toggle("active", leftHeld);
-  holdLeft.textContent = leftHeld ? "Release Left" : "Hold Left";
-  await api("/api/mouse", { button: "left", kind: leftHeld ? "down" : "up" });
-});
-
 panic.addEventListener("click", async () => {
   await releaseAutoDrag();
   if (leftHeld) {
     leftHeld = false;
-    holdLeft.classList.remove("active");
-    holdLeft.textContent = "Hold Left";
+    setHoldLeftUi();
     await api("/api/mouse", { button: "left", kind: "up" });
   }
 });
