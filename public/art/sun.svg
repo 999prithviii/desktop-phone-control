@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 2200" preserveAspectRatio="xMidYMid slice">
+  <rect width="1600" height="2200" fill="#f5f1df"/>
+  <rect x="80" y="90" width="1440" height="2020" fill="#f6ca05"/>
+  <circle cx="420" cy="390" r="285" fill="#ffd91a"/>
+  <circle cx="1090" cy="470" r="250" fill="#f7bf00"/>
+  <circle cx="760" cy="1620" r="420" fill="#ffd51a"/>
+  <circle cx="1280" cy="1260" r="230" fill="#ffcc12"/>
+  <path d="M75 740h420v345H75z" fill="#f7c400"/>
+  <path d="M535 90h370v520H535z" fill="#fff7d0"/>
+  <path d="M905 90h430v615H905z" fill="#f5c000"/>
+  <path d="M85 1285h555v420H85z" fill="#fff3bf"/>
+  <path d="M730 1045h460v440H730z" fill="#f6d12b"/>
+  <path d="M1210 875h310v575h-310z" fill="#fff4c8" opacity=".55"/>
+  <path d="M360 560c130-250 400-310 575-125 210 225 18 545-295 470-215-52-285-212-280-345z" fill="#fff8db" opacity=".52"/>
+  <path d="M870 1120c220-250 520-230 620-15 105 224-100 470-390 395-165-42-235-185-230-380z" fill="#fff8db" opacity=".58"/>
+  <path d="M120 1720c300-20 540 130 670 390H120z" fill="#f3bd00"/>
+  <path d="M800 1560c280-110 520-25 700 250v300H935c-130-95-205-245-135-550z" fill="#ffe05a"/>
+  <g fill="none" stroke="#20201c" stroke-width="2.2" opacity=".72">
+    <path d="M80 90c390 20 560 250 535 610"/>
+    <path d="M80 620c260-20 480 70 660 265"/>
+    <path d="M80 1010c350 0 605 115 770 380"/>
+    <path d="M80 1660c310 30 520 210 640 450"/>
+    <path d="M415 90c120 220 120 440 0 660"/>
+    <path d="M535 90c280 80 440 255 480 525"/>
+    <path d="M905 90c210 105 335 285 375 540"/>
+    <path d="M1520 120c-225 0-375 120-450 360"/>
+    <path d="M1520 685c-285 10-475 140-570 390"/>
+    <path d="M1520 1040c-245 30-420 160-525 390"/>
+    <path d="M1520 1430c-330-30-590 95-780 380"/>
+    <path d="M520 2110c40-360 220-585 540-675"/>
+    <path d="M940 2110c-60-280 30-500 270-660"/>
+  </g>
+  <g fill="none" stroke="#fff8d4" stroke-width="10" opacity=".6">
+    <path d="M100 110h1420"/>
+    <path d="M92 2090h1415"/>
+    <path d="M100 1110h495"/>
+  </g>
+</svg>

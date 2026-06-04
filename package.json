@@ -1,0 +1,14 @@
+{
+  "name": "desktop-phone-control",
+  "version": "0.1.15",
+  "private": true,
+  "description": "Local-first phone controller for a Windows desktop.",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node src/server.js"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
