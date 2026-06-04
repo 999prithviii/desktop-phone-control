@@ -4,6 +4,8 @@ This app controls your mouse and keyboard. Treat it as high-risk local tooling.
 
 ## Hard Rules
 
+- Keep the source repository private before launch.
+- Share installer/build artifacts with testers, not the source repo.
 - Do not port-forward this app.
 - Do not put it behind a public tunnel like ngrok or Cloudflare Tunnel unless we redesign auth first.
 - Do not leave it running unattended.
@@ -15,6 +17,7 @@ This app controls your mouse and keyboard. Treat it as high-risk local tooling.
 
 ## Current Protection
 
+- Proprietary license and private-source launch posture.
 - Random pairing code on every server start.
 - Random session token stored as an HTTP-only cookie.
 - API actions require pairing.
@@ -40,6 +43,7 @@ This app controls your mouse and keyboard. Treat it as high-risk local tooling.
 
 ## Safer Future Version
 
+- Signed installer builds for tester distribution.
 - HTTPS with a local certificate.
 - Device allowlist.
 - Pairing QR code with short expiry.

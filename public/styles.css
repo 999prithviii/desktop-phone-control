@@ -457,6 +457,18 @@ button.active {
   color: var(--text);
 }
 
+.app-credit {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  justify-content: center;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 2px solid var(--line);
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .slider-row {
   display: grid;
   grid-template-columns: auto minmax(120px, 1fr) 44px;
