@@ -1,4 +1,4 @@
-const CACHE_NAME = "desktop-control-v0.1.15";
+const CACHE_NAME = "desktop-control-v0.1.17";
 const ASSETS = [
   "/",
   "/index.html",
@@ -10,7 +10,8 @@ const ASSETS = [
   "/sender.js",
   "/manifest.webmanifest",
   "/icon.svg",
-  "/art/sun.svg"
+  "/art/sun.svg",
+  "/art/future.jpeg"
 ];
 
 self.addEventListener("install", (event) => {

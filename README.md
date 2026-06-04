@@ -9,7 +9,7 @@ This MVP turns your phone browser into a touchpad and keyboard for your laptop. 
 - Pairing code printed in the desktop terminal.
 - Live screen stream through browser WebRTC screen sharing.
 - Desktop shortcut manager for phone buttons.
-- Light/dark mode plus Mint, Coral, Sun, Cyan, and Pink accent variants.
+- Light/dark mode plus Mint, Coral, Sun, Future, Cyan, and Pink accent variants.
 - Phone touchpad for cursor movement.
 - Adjustable mouse sensitivity from `0.8x` to `3.2x`.
 - One-finger tap for left click.
@@ -42,7 +42,7 @@ The stream does not save screenshot files. Chrome captures frames, encodes them 
 
 To customize phone shortcuts:
 
-1. Open the printed `admin.html` URL on the laptop.
+1. Open the printed `?admin=...` URL on the laptop.
 2. Add button labels and key combos like `ctrl+s`, `alt+tab`, `win+d`, or `shift+f4`.
 3. Click `Save`.
 4. The paired phone app refreshes shortcut buttons automatically within a few seconds.

@@ -1,6 +1,6 @@
 {
   "name": "desktop-phone-control",
-  "version": "0.1.15",
+  "version": "0.1.17",
   "private": true,
   "description": "Local-first phone controller for a Windows desktop.",
   "type": "module",

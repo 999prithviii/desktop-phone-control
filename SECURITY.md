@@ -34,7 +34,7 @@ This app controls your mouse and keyboard. Treat it as high-risk local tooling.
 - HTTP is unencrypted on the LAN.
 - Pairing code can be used by another device on the same network while the server is running.
 - The stream sender URL printed in the terminal can start a screen-sharing session if opened on the laptop.
-- The desktop admin URL printed in the terminal can edit phone shortcut buttons while the server is running.
+- The desktop `?admin=...` URL printed in the terminal can edit phone shortcut buttons while the server is running.
 - Text typing uses the Windows clipboard temporarily, then attempts to restore the old clipboard text.
 - No per-device revoke yet.
 

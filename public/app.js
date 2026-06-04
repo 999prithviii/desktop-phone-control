@@ -16,6 +16,13 @@ const sensitivity = document.querySelector("#sensitivity");
 const sensitivityValue = document.querySelector("#sensitivityValue");
 const shortcutPanel = document.querySelector("#shortcutPanel");
 const phoneShortcuts = document.querySelector("#phoneShortcuts");
+const shortcutEditor = document.querySelector("#shortcutEditor");
+const shortcutEditorStatus = document.querySelector("#shortcutEditorStatus");
+const shortcutForm = document.querySelector("#shortcutForm");
+const shortcutLabel = document.querySelector("#shortcutLabel");
+const shortcutKey = document.querySelector("#shortcutKey");
+const shortcutList = document.querySelector("#shortcutList");
+const saveShortcuts = document.querySelector("#saveShortcuts");
 const searchForm = document.querySelector("#searchForm");
 const searchText = document.querySelector("#searchText");
 const typeForm = document.querySelector("#typeForm");
@@ -37,6 +44,8 @@ let longPressTimer = null;
 let streamPeer = null;
 let remoteMediaStream = null;
 let shortcutPollTimer = null;
+let editableShortcuts = [];
+const adminToken = new URL(location.href).searchParams.get("admin") || "";
 
 const DEFAULT_MOVE_SPEED = 2.6;
 const SCROLL_SPEED = 12;
@@ -57,6 +66,23 @@ async function api(path, body = {}) {
     throw new Error(data.error || `Request failed: ${response.status}`);
   }
   return data;
+}
+
+function normalizeKey(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/\s+/g, "")
+    .replace(/\+\+/g, "+")
+    .replace(/^\+|\+$/g, "");
+}
+
+function createShortcutId() {
+  if (crypto.randomUUID) return crypto.randomUUID();
+  return `shortcut-${Date.now()}-${Math.round(Math.random() * 10000)}`;
+}
+
+async function adminApi(path, body = {}) {
+  return api(path, { token: adminToken, ...body });
 }
 
 function applyDisplaySettings() {
@@ -100,6 +126,10 @@ function showControls() {
       void loadPhoneShortcuts();
     }, 5000);
   }
+  if (adminToken) {
+    shortcutEditor.classList.remove("hidden");
+    void loadEditableShortcuts();
+  }
 }
 
 function renderPhoneShortcuts(shortcuts) {
@@ -133,6 +163,80 @@ async function loadPhoneShortcuts() {
   } catch (error) {
     console.error(error);
     renderPhoneShortcuts([]);
+  }
+}
+
+function collectEditableShortcuts() {
+  return [...shortcutList.querySelectorAll(".shortcut-row")].map((row) => ({
+    id: row.dataset.id,
+    label: row.querySelector("[data-field='label']").value,
+    key: normalizeKey(row.querySelector("[data-field='key']").value)
+  }));
+}
+
+function renderEditableShortcuts() {
+  shortcutList.innerHTML = "";
+
+  for (const shortcut of editableShortcuts) {
+    const row = document.createElement("article");
+    row.className = "shortcut-row";
+    row.dataset.id = shortcut.id;
+
+    const label = document.createElement("input");
+    label.dataset.field = "label";
+    label.maxLength = 40;
+    label.value = shortcut.label;
+    label.placeholder = "Button label";
+
+    const key = document.createElement("input");
+    key.dataset.field = "key";
+    key.maxLength = 40;
+    key.value = shortcut.key;
+    key.placeholder = "ctrl+s";
+
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "danger";
+    remove.textContent = "Delete";
+    remove.addEventListener("click", () => {
+      editableShortcuts = collectEditableShortcuts().filter((item) => item.id !== shortcut.id);
+      renderEditableShortcuts();
+      shortcutEditorStatus.textContent = "edited";
+    });
+
+    row.append(label, key, remove);
+    shortcutList.append(row);
+  }
+}
+
+async function loadEditableShortcuts() {
+  try {
+    const data = await adminApi("/api/admin/shortcuts/list");
+    editableShortcuts = data.shortcuts || [];
+    renderEditableShortcuts();
+    shortcutEditorStatus.textContent = `${editableShortcuts.length} saved`;
+  } catch (error) {
+    console.error(error);
+    shortcutEditorStatus.textContent = error.message;
+  }
+}
+
+async function saveEditableShortcuts() {
+  saveShortcuts.disabled = true;
+  shortcutEditorStatus.textContent = "saving";
+  try {
+    const data = await adminApi("/api/admin/shortcuts/save", {
+      shortcuts: collectEditableShortcuts()
+    });
+    editableShortcuts = data.shortcuts || [];
+    renderEditableShortcuts();
+    renderPhoneShortcuts(editableShortcuts);
+    shortcutEditorStatus.textContent = "saved";
+  } catch (error) {
+    console.error(error);
+    shortcutEditorStatus.textContent = error.message;
+  } finally {
+    saveShortcuts.disabled = false;
   }
 }
 
@@ -399,6 +503,11 @@ pairForm.addEventListener("submit", async (event) => {
   }
 });
 
+if (adminToken) {
+  showControls();
+  pairPanel.classList.add("hidden");
+}
+
 const savedSensitivity = Number(localStorage.getItem("deskctl:sensitivity"));
 if (Number.isFinite(savedSensitivity)) {
   sensitivity.value = String(Math.max(0.8, Math.min(5, savedSensitivity)));
@@ -562,6 +671,24 @@ connectStream.addEventListener("click", () => {
 
 stopStream.addEventListener("click", () => {
   void stopViewingStream();
+});
+
+shortcutForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const label = shortcutLabel.value.trim();
+  const key = normalizeKey(shortcutKey.value);
+  if (!label || !key) return;
+
+  editableShortcuts = collectEditableShortcuts();
+  editableShortcuts.push({ id: createShortcutId(), label, key });
+  shortcutLabel.value = "";
+  shortcutKey.value = "";
+  renderEditableShortcuts();
+  shortcutEditorStatus.textContent = "edited";
+});
+
+saveShortcuts.addEventListener("click", () => {
+  void saveEditableShortcuts();
 });
 
 holdLeft.addEventListener("click", async () => {

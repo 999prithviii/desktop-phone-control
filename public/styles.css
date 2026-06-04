@@ -76,6 +76,32 @@
   --artwork: url("/art/sun.svg");
 }
 
+:root[data-accent="future"] {
+  --bg: #020506;
+  --bg-top: #050b0d;
+  --grid: rgba(0, 229, 255, 0.08);
+  --artwork: url("/art/future.jpeg");
+  --artwork-tint: rgba(0, 4, 6, 0.5);
+  --panel: rgba(2, 12, 15, 0.7);
+  --panel-2: rgba(4, 20, 24, 0.72);
+  --panel-3: rgba(0, 10, 12, 0.64);
+  --input-bg: rgba(0, 8, 10, 0.78);
+  --video-bg: rgba(0, 0, 0, 0.86);
+  --pad-bg-1: rgba(0, 14, 18, 0.9);
+  --pad-bg-2: rgba(3, 31, 36, 0.88);
+  --button-bg: rgba(0, 21, 25, 0.78);
+  --button-hover: rgba(0, 43, 50, 0.86);
+  --text: #e8fbff;
+  --muted: #75aeb8;
+  --line: rgba(0, 229, 255, 0.36);
+  --accent: #00e5ff;
+  --accent-2: #00ff88;
+  --accent-3: #ff3158;
+  --accent-soft: rgba(0, 229, 255, 0.16);
+  --active-bg: rgba(0, 86, 96, 0.45);
+  --shadow: 0 20px 60px rgba(0, 229, 255, 0.08);
+}
+
 :root[data-accent="cyan"] {
   --accent: #00e5ff;
   --accent-2: #ff6b35;
@@ -102,6 +128,11 @@
 
 :root[data-theme="light"][data-accent="sun"] {
   --active-bg: #fff3ba;
+}
+
+:root[data-theme="light"][data-accent="future"] {
+  color-scheme: dark;
+  --artwork-tint: rgba(0, 10, 13, 0.42);
 }
 
 :root[data-theme="light"][data-accent="cyan"] {
@@ -131,7 +162,8 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-:root[data-accent="sun"] body {
+:root[data-accent="sun"] body,
+:root[data-accent="future"] body {
   background:
     linear-gradient(var(--artwork-tint), var(--artwork-tint)),
     var(--artwork) center / cover fixed,
@@ -339,6 +371,31 @@ button.active {
   display: grid;
   gap: 10px;
   margin-top: 12px;
+}
+
+.shortcut-editor {
+  display: grid;
+  gap: 10px;
+  margin: 10px 0;
+  padding: 12px;
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-3);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.section-head strong {
+  color: var(--text);
 }
 
 .slider-row {

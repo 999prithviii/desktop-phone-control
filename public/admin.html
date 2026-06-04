@@ -9,25 +9,8 @@
     <link rel="stylesheet" href="/styles.css">
   </head>
   <body>
-    <main class="shell admin-shell">
-      <section class="panel">
-        <header class="topbar">
-          <div>
-            <strong>Phone Shortcuts</strong>
-            <span id="adminStatus">loading</span>
-          </div>
-          <button id="saveShortcuts" type="button">Save</button>
-        </header>
-
-        <form id="shortcutForm" class="shortcut-form">
-          <input id="shortcutLabel" autocomplete="off" maxlength="40" placeholder="Button label">
-          <input id="shortcutKey" autocomplete="off" maxlength="40" placeholder="ctrl+s">
-          <button type="submit">Add</button>
-        </form>
-
-        <section id="shortcutList" class="shortcut-list" aria-label="Saved shortcuts"></section>
-      </section>
-    </main>
-    <script src="/admin.js"></script>
+    <script>
+      location.replace(`/?admin=${encodeURIComponent(new URL(location.href).searchParams.get("token") || "")}`);
+    </script>
   </body>
 </html>

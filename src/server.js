@@ -666,7 +666,7 @@ server.listen(port, host, () => {
   for (const url of urls) console.log(`  ${url}`);
   console.log("");
   console.log("To edit phone shortcuts, open this on the laptop:");
-  console.log(`  http://127.0.0.1:${port}/admin.html?token=${adminKey}`);
+  console.log(`  http://127.0.0.1:${port}/?admin=${adminKey}`);
   console.log("");
   console.log("To stream your screen, open this on the laptop:");
   console.log(`  http://127.0.0.1:${port}/sender.html?token=${streamKey}`);

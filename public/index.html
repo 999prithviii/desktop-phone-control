@@ -39,6 +39,7 @@
             <option value="mint">Mint</option>
             <option value="coral">Coral</option>
             <option value="sun">Sun</option>
+            <option value="future">Future</option>
             <option value="cyan">Cyan</option>
             <option value="pink">Pink</option>
           </select>
@@ -88,6 +89,20 @@
 
         <section id="shortcutPanel" class="shortcut-panel hidden" aria-label="Custom shortcuts">
           <div id="phoneShortcuts" class="grid two"></div>
+        </section>
+
+        <section id="shortcutEditor" class="shortcut-editor hidden" aria-label="Edit shortcuts">
+          <header class="section-head">
+            <strong>Edit Shortcuts</strong>
+            <span id="shortcutEditorStatus">locked</span>
+          </header>
+          <form id="shortcutForm" class="shortcut-form">
+            <input id="shortcutLabel" autocomplete="off" maxlength="40" placeholder="Button label">
+            <input id="shortcutKey" autocomplete="off" maxlength="40" placeholder="ctrl+s">
+            <button type="submit">Add</button>
+          </form>
+          <section id="shortcutList" class="shortcut-list" aria-label="Saved shortcuts"></section>
+          <button id="saveShortcuts" type="button">Save Shortcuts</button>
         </section>
 
         <form id="searchForm" class="text-row">
