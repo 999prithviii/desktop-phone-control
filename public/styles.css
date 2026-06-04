@@ -105,11 +105,27 @@
 }
 
 :root[data-accent="cyan"] {
-  --accent: #00e5ff;
-  --accent-2: #ff6b35;
-  --accent-3: #ffe156;
-  --accent-soft: rgba(0, 229, 255, 0.16);
-  --active-bg: #173a40;
+  --bg: #050708;
+  --bg-top: #090d12;
+  --grid: rgba(104, 255, 244, 0.07);
+  --artwork: url("/art/cyan.svg");
+  --artwork-tint: rgba(0, 3, 5, 0.46);
+  --panel: rgba(4, 10, 13, 0.72);
+  --panel-2: rgba(8, 18, 24, 0.76);
+  --panel-3: rgba(0, 12, 16, 0.64);
+  --input-bg: rgba(0, 8, 12, 0.78);
+  --pad-bg-1: rgba(3, 12, 18, 0.9);
+  --pad-bg-2: rgba(4, 27, 38, 0.88);
+  --button-bg: rgba(5, 20, 28, 0.78);
+  --button-hover: rgba(9, 40, 54, 0.86);
+  --text: #eaffff;
+  --muted: #8cc8d2;
+  --line: rgba(104, 255, 244, 0.34);
+  --accent: #68fff4;
+  --accent-2: #345cff;
+  --accent-3: #99f6ff;
+  --accent-soft: rgba(104, 255, 244, 0.16);
+  --active-bg: rgba(104, 255, 244, 0.16);
 }
 
 :root[data-accent="pink"] {
@@ -153,7 +169,16 @@
 }
 
 :root[data-theme="light"][data-accent="cyan"] {
-  --active-bg: #d6f8ff;
+  --bg: #effbfc;
+  --bg-top: #fbffff;
+  --artwork-tint: rgba(240, 255, 255, 0.42);
+  --panel: rgba(255, 255, 255, 0.72);
+  --panel-2: rgba(232, 250, 252, 0.76);
+  --panel-3: rgba(215, 244, 248, 0.58);
+  --text: #071f27;
+  --muted: #527984;
+  --line: rgba(27, 161, 176, 0.34);
+  --active-bg: rgba(104, 255, 244, 0.2);
 }
 
 :root[data-theme="light"][data-accent="pink"] {
@@ -196,6 +221,7 @@ body {
 :root[data-accent="mint"] body,
 :root[data-accent="sun"] body,
 :root[data-accent="future"] body,
+:root[data-accent="cyan"] body,
 :root[data-accent="pink"] body {
   background:
     linear-gradient(var(--artwork-tint), var(--artwork-tint)),

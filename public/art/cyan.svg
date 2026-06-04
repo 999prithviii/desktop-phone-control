@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 2200" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <filter id="blur" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="70"/>
+    </filter>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="3" seed="27"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="table" tableValues="0 .2"/></feComponentTransfer>
+    </filter>
+    <pattern id="dots" width="13" height="9" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.4" fill="#69fff4" opacity=".68"/>
+    </pattern>
+  </defs>
+  <rect width="1400" height="2200" fill="#050708"/>
+  <g filter="url(#blur)">
+    <path d="M210 60c260 20 390 220 315 480-85 295 170 360 50 675-92 240-430 250-500 5-55-195 95-330 70-560-22-205-115-430 65-600z" fill="#345cff" opacity=".78">
+      <animateTransform attributeName="transform" type="translate" values="0 0;45 35;0 0" dur="9s" repeatCount="indefinite"/>
+    </path>
+    <path d="M820 70c280 95 420 370 320 650-90 250 100 410-80 640-160 205-455 95-440-170 10-175 135-280 75-500-70-260-60-505 125-620z" fill="#2b63ff" opacity=".8">
+      <animateTransform attributeName="transform" type="translate" values="0 0;-35 55;0 0" dur="11s" repeatCount="indefinite"/>
+    </path>
+    <path d="M455 1160c250-55 465 90 470 325 5 260-255 375-465 265-250-130-260-475-5-590z" fill="#39f1ff" opacity=".68">
+      <animateTransform attributeName="transform" type="translate" values="0 0;30 -45;0 0" dur="8s" repeatCount="indefinite"/>
+    </path>
+    <path d="M830 1485c225-35 365 105 350 325-18 260-260 375-430 220-160-145-115-430 80-545z" fill="#2438ff" opacity=".75">
+      <animateTransform attributeName="transform" type="translate" values="0 0;-45 -20;0 0" dur="10s" repeatCount="indefinite"/>
+    </path>
+  </g>
+  <g opacity=".72">
+    <path d="M70 260h1080v130H70z" fill="url(#dots)">
+      <animate attributeName="opacity" values=".3;.86;.45;.72" dur="3.2s" repeatCount="indefinite"/>
+    </path>
+    <path d="M80 520h1140v160H80z" fill="url(#dots)">
+      <animate attributeName="opacity" values=".7;.35;.9;.7" dur="4.1s" repeatCount="indefinite"/>
+    </path>
+    <path d="M55 845h1200v115H55z" fill="url(#dots)">
+      <animate attributeName="opacity" values=".45;.85;.4" dur="2.8s" repeatCount="indefinite"/>
+    </path>
+  </g>
+  <g fill="none" stroke="#68fff4" stroke-width="2" opacity=".3">
+    <path d="M95 325c250-35 435 65 660 20 170-35 310-20 465 25"/>
+    <path d="M70 600c330 45 580-70 920 0 105 22 195 20 280 0"/>
+    <path d="M60 900c235-30 405 40 630 0 265-48 450-10 600 25"/>
+  </g>
+  <rect width="1400" height="2200" filter="url(#grain)" opacity=".48"/>
+</svg>
