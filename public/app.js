@@ -289,13 +289,16 @@ function createTrayBody(tray, actions) {
 
 function startTrayDrag(event, trayElement) {
   event.preventDefault();
-  trayDrag = { element: trayElement, pointerId: event.pointerId };
+  trayDrag = { element: trayElement, pointerId: event.pointerId, startedAt: performance.now() };
   trayElement.classList.add("is-dragging");
-  event.currentTarget.setPointerCapture(event.pointerId);
+  document.body.classList.add("is-tray-dragging");
+  document.addEventListener("pointermove", moveTrayDrag);
+  document.addEventListener("pointerup", finishTrayDrag);
+  document.addEventListener("pointercancel", finishTrayDrag);
 }
 
 function moveTrayDrag(event) {
-  if (!trayDrag) return;
+  if (!trayDrag || event.pointerId !== trayDrag.pointerId) return;
   event.preventDefault();
 
   const dragging = trayDrag.element;
@@ -311,6 +314,10 @@ function moveTrayDrag(event) {
 function finishTrayDrag() {
   if (!trayDrag) return;
   trayDrag.element.classList.remove("is-dragging");
+  document.body.classList.remove("is-tray-dragging");
+  document.removeEventListener("pointermove", moveTrayDrag);
+  document.removeEventListener("pointerup", finishTrayDrag);
+  document.removeEventListener("pointercancel", finishTrayDrag);
   shortcutTrayOrder = [...shortcutDeck.querySelectorAll(".shortcut-tray")].map((tray) => tray.dataset.trayId);
   shortcutTrayOrder = normalizeTrayOrder(shortcutTrayOrder);
   saveTrayOrder();
@@ -347,12 +354,8 @@ function renderShortcutDeck() {
     dragHandle.type = "button";
     dragHandle.className = "tray-drag-handle";
     dragHandle.setAttribute("aria-label", `Drag ${tray.title} menu`);
-    dragHandle.textContent = "::";
+    dragHandle.textContent = "Drag";
     dragHandle.addEventListener("pointerdown", (event) => startTrayDrag(event, article));
-    dragHandle.addEventListener("pointermove", moveTrayDrag);
-    dragHandle.addEventListener("pointerup", finishTrayDrag);
-    dragHandle.addEventListener("pointercancel", finishTrayDrag);
-    dragHandle.addEventListener("lostpointercapture", finishTrayDrag);
 
     const toggle = document.createElement("button");
     toggle.type = "button";

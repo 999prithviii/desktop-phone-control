@@ -1,4 +1,4 @@
-const CACHE_NAME = "desktop-control-v0.1.24";
+const CACHE_NAME = "desktop-control-v0.1.25";
 const ASSETS = [
   "/",
   "/index.html",
