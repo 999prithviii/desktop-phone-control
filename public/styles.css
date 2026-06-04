@@ -114,10 +114,12 @@
 
 :root[data-accent="pink"] {
   --accent: #ff4fd8;
-  --accent-2: #39ff88;
-  --accent-3: #ffe156;
-  --accent-soft: rgba(255, 79, 216, 0.16);
-  --active-bg: #461d3d;
+  --accent-2: #ff3158;
+  --accent-3: #ffd1ec;
+  --accent-soft: rgba(255, 79, 216, 0.18);
+  --active-bg: rgba(255, 79, 216, 0.18);
+  --line: rgba(255, 79, 216, 0.32);
+  --artwork: url("/art/pink.svg");
 }
 
 :root[data-theme="light"][data-accent="mint"] {
@@ -155,7 +157,21 @@
 }
 
 :root[data-theme="light"][data-accent="pink"] {
-  --active-bg: #ffe0f7;
+  --bg: #fff4f9;
+  --bg-top: #fffdf8;
+  --artwork-tint: rgba(255, 247, 252, 0.25);
+  --panel: rgba(255, 255, 255, 0.7);
+  --panel-2: rgba(255, 235, 247, 0.76);
+  --panel-3: rgba(255, 222, 241, 0.58);
+  --input-bg: rgba(255, 255, 255, 0.84);
+  --pad-bg-1: rgba(255, 247, 252, 0.92);
+  --pad-bg-2: rgba(255, 224, 244, 0.86);
+  --button-bg: rgba(255, 255, 255, 0.74);
+  --button-hover: rgba(255, 226, 244, 0.9);
+  --text: #321125;
+  --muted: #7b5c70;
+  --line: rgba(213, 72, 160, 0.34);
+  --active-bg: rgba(255, 79, 216, 0.2);
 }
 
 * {
@@ -179,7 +195,8 @@ body {
 
 :root[data-accent="mint"] body,
 :root[data-accent="sun"] body,
-:root[data-accent="future"] body {
+:root[data-accent="future"] body,
+:root[data-accent="pink"] body {
   background:
     linear-gradient(var(--artwork-tint), var(--artwork-tint)),
     var(--artwork) center / cover fixed,

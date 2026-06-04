@@ -1,4 +1,4 @@
-const CACHE_NAME = "desktop-control-v0.1.18";
+const CACHE_NAME = "desktop-control-v0.1.19";
 const ASSETS = [
   "/",
   "/index.html",
@@ -11,6 +11,7 @@ const ASSETS = [
   "/manifest.webmanifest",
   "/icon.svg",
   "/art/mint.svg",
+  "/art/pink.svg",
   "/art/sun.svg",
   "/art/future.jpeg"
 ];
