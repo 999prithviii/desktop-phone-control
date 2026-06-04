@@ -12,7 +12,7 @@ The phone app is now installable as a PWA.
 Run the desktop server:
 
 ```powershell
-cd "C:\Users\prith\Documents\Prithvi's Database\desktop-phone-control"
+cd path\to\desktop-phone-control
 npm.cmd start
 ```
 
@@ -58,4 +58,3 @@ Recommended next step:
 - local HTTPS
 
 Do not add internet tunneling until authentication is stronger.
-

@@ -26,7 +26,7 @@ This MVP turns your phone browser into a touchpad and keyboard for your laptop. 
 ## Run
 
 ```powershell
-cd "C:\Users\prith\Documents\Prithvi's Database\desktop-phone-control"
+cd path\to\desktop-phone-control
 npm start
 ```
 
