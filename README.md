@@ -220,3 +220,8 @@ This project is proprietary. See [LICENSE.md](LICENSE.md). Do not copy, modify, 
 
 Built by Prithvi — Designer & Builder  
 GitHub: [@999prithviii](https://github.com/999prithviii)
+
+## Contributors
+
+- [@danielgoleman97-lab](https://github.com/danielgoleman97-lab) - QA testing
+- [@mvzy21](https://github.com/mvzy21) - QA testing
