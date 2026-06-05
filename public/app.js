@@ -992,6 +992,26 @@ function finishGesture() {
   }
 }
 
+function cancelTouchpadGesture() {
+  clearLongPress();
+
+  for (const pointerId of activePointers.keys()) {
+    try {
+      if (pad.hasPointerCapture(pointerId)) pad.releasePointerCapture(pointerId);
+    } catch {}
+  }
+
+  activePointers.clear();
+  gesture = null;
+  pendingDx = 0;
+  pendingDy = 0;
+  pendingScrollAmount = 0;
+
+  if (autoDrag) {
+    void releaseAutoDrag();
+  }
+}
+
 pairForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   pairError.textContent = "";
@@ -1043,6 +1063,10 @@ accentSelect.addEventListener("change", () => {
 
 pad.addEventListener("pointerdown", (event) => {
   event.preventDefault();
+  if (event.isPrimary && activePointers.size > 0 && !activePointers.has(event.pointerId)) {
+    cancelTouchpadGesture();
+  }
+
   activePointers.set(event.pointerId, {
     x: event.clientX,
     y: event.clientY
@@ -1097,15 +1121,19 @@ pad.addEventListener("pointerup", (event) => {
 
 pad.addEventListener("pointercancel", (event) => {
   event.preventDefault();
-  activePointers.delete(event.pointerId);
-  if (activePointers.size === 0) {
-    finishGesture();
-  } else {
-    refreshGestureForPointerCount();
-  }
-  scheduleMove();
-  scheduleScroll();
+  cancelTouchpadGesture();
 });
+
+pad.addEventListener("lostpointercapture", (event) => {
+  if (!activePointers.has(event.pointerId)) return;
+  cancelTouchpadGesture();
+});
+
+window.addEventListener("blur", cancelTouchpadGesture);
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState !== "visible") cancelTouchpadGesture();
+});
+window.addEventListener("pagehide", cancelTouchpadGesture);
 
 document.querySelectorAll("[data-click]").forEach((button) => {
   button.addEventListener("click", async () => {

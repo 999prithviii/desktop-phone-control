@@ -5,7 +5,7 @@ This file explains the latest QA issue, what changed, and how another tester or 
 ## Current State
 
 - Project status: pre-release alpha
-- Current version: `v0.1.27`
+- Current version: `v0.1.28`
 - Source repo should remain private.
 - Recommended Windows startup command is:
 
@@ -63,6 +63,13 @@ The backend now uses a small HTTP error path so expected validation failures do 
 - Invalid admin shortcut saves return `400`.
 - Invalid file drops return `400`.
 - App/cache version was bumped to force phone browsers to refresh frontend logic.
+
+## Fixes Applied In v0.1.28
+
+- Fixed a touchpad bug where interrupted two-finger gestures could leave the phone UI stuck in scroll mode.
+- Cancelled/lost pointer events now reset the touchpad gesture state.
+- Page blur, hidden-tab, and page-unload events now clear pending touchpad state.
+- New primary touches clear stale pointers from interrupted gestures.
 
 ## Verification Steps
 

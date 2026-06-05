@@ -6,7 +6,7 @@ This log only includes product-safe public summaries. It does not include local 
 
 ## Current Version
 
-- `v0.1.27`
+- `v0.1.28`
 
 ## v0.0.0 -> v0.1.14 - Prototype Foundation
 
@@ -102,6 +102,13 @@ This log only includes product-safe public summaries. It does not include local 
 - Fixed first-run sensitivity so new phones start at `2.6x`.
 - Kept saved sensitivity values working for existing users.
 - Returned proper client errors for malformed JSON, oversized bodies, invalid shortcut saves, and invalid file drops.
+
+## v0.1.28 - Touchpad Scroll Lock Fix
+
+- Fixed a phone touchpad bug where interrupted two-finger scroll gestures could leave the app stuck scrolling.
+- Added gesture cleanup for cancelled touches, lost pointer capture, page blur, hidden tabs, and page unload.
+- Added stale gesture reset when a new primary touch begins after an interrupted touch sequence.
+- Bumped the app cache so phones pull the new touchpad logic.
 
 ## Notes For Testers
 

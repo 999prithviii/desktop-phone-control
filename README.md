@@ -4,7 +4,7 @@ Local-first phone controller for a Windows desktop.
 
 Built by Prithvi — Designer & Builder  
 GitHub: [@999prithviii](https://github.com/999prithviii)  
-Version: `0.1.27`
+Version: `0.1.28`
 
 Community dashboard: [COMMUNITY_DASHBOARD.md](COMMUNITY_DASHBOARD.md)
 Update log: [UPDATE_LOG.md](UPDATE_LOG.md)

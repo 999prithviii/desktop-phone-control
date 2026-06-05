@@ -6,12 +6,18 @@ No private paths, pairing codes, tokens, screenshots, or personal test data are 
 
 ## Current Build
 
-- Version: `v0.1.27`
+- Version: `v0.1.28`
 - Platform: Windows desktop control
 - Startup recommendation on Windows PowerShell: `npm.cmd start`
 - Safety rule: trusted local Wi-Fi only
 
 ## Latest QA Findings And Fixes
+
+### Fixed In v0.1.28
+
+| Area | What Was Found | What Was Fixed | Status |
+| --- | --- | --- | --- |
+| Touchpad gestures | A phone touchpad session could get stuck scrolling after an interrupted two-finger gesture, blocking normal mouse movement. | Cancelled/lost touch events now fully reset the gesture state, clear pending scroll/move values, and release active drag state safely. | Fixed |
 
 ### Fixed In v0.1.27
 
