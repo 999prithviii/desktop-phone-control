@@ -6,6 +6,7 @@ Built by Prithvi — Designer & Builder
 GitHub: [@999prithviii](https://github.com/999prithviii)  
 Version: `0.1.27`
 
+Community dashboard: [COMMUNITY_DASHBOARD.md](COMMUNITY_DASHBOARD.md)
 Update log: [UPDATE_LOG.md](UPDATE_LOG.md)
 
 ## Status
@@ -56,7 +57,7 @@ You need:
 - A phone on the same Wi-Fi as the PC.
 - Google Chrome or another modern browser.
 - Node.js `22` or newer installed on the PC.
-- Access to this private GitHub repository.
+- Access to this GitHub repository.
 
 Mac note: Mac users can clone/read the repo, but full desktop control is currently Windows-only. Mac support needs a macOS helper later.
 
