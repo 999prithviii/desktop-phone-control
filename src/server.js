@@ -684,8 +684,12 @@ async function handleApi(req, res, pathname) {
   }
 
   if (pathname === "/api/files/drop") {
-    const files = saveDroppedFiles(body.files);
-    sendJson(res, 200, { ok: true, files, directory: "data/dropbox" });
+    try {
+      const files = saveDroppedFiles(body.files);
+      sendJson(res, 200, { ok: true, files, directory: "data/dropbox" });
+    } catch (error) {
+      sendJson(res, 400, { ok: false, error: error.message || "invalid file upload" });
+    }
     return;
   }
 
