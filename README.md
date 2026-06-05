@@ -6,6 +6,8 @@ Built by Prithvi — Designer & Builder
 GitHub: [@999prithviii](https://github.com/999prithviii)  
 Version: `0.1.26`
 
+Update log: [UPDATE_LOG.md](UPDATE_LOG.md)
+
 ## Status
 
 This project is in **pre-release alpha**.
