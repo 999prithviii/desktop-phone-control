@@ -316,7 +316,8 @@ p {
 }
 
 input,
-select {
+select,
+textarea {
   width: 100%;
   min-height: 48px;
   border: 1px solid var(--line);
@@ -333,8 +334,15 @@ select {
 }
 
 input:focus,
-select:focus {
+select:focus,
+textarea:focus {
   border-color: var(--accent);
+}
+
+textarea {
+  min-height: 96px;
+  padding: 12px 14px;
+  resize: vertical;
 }
 
 input[type="range"] {
@@ -630,6 +638,31 @@ button.active {
   margin: 4px 4px 0;
   color: var(--muted);
   font-size: 13px;
+}
+
+.transfer-panel {
+  display: grid;
+  gap: var(--tile-gap);
+}
+
+.transfer-block {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-field);
+  background: var(--panel-2);
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
+}
+
+.transfer-block strong {
+  font-size: 13px;
+}
+
+.transfer-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--tile-gap);
 }
 
 .app-credit {

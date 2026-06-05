@@ -4,7 +4,7 @@ Local-first phone controller for a Windows desktop.
 
 Built by Prithvi — Designer & Builder  
 GitHub: [@999prithviii](https://github.com/999prithviii)  
-Version: `0.1.25`
+Version: `0.1.26`
 
 ## Status
 
@@ -20,6 +20,7 @@ This MVP turns your phone browser into a touchpad and keyboard for your laptop. 
 - Live screen stream through browser WebRTC screen sharing.
 - Desktop shortcut manager for phone buttons.
 - Draggable accordion shortcut trays for compact app-specific controls.
+- Clipboard and file transfer tray for daily phone-to-PC handoff.
 - Light/dark mode plus Mint, Coral, Sun, Future, Cyan, and Pink accent variants.
 - Phone touchpad for cursor movement.
 - Adjustable mouse sensitivity from `0.8x` to `5x`.
@@ -33,6 +34,7 @@ This MVP turns your phone browser into a touchpad and keyboard for your laptop. 
 - Text typing.
 - Browser/search helper: focus address bar, type, press Enter.
 - Common keys: Escape, Space, Enter, `F`, `F11`, media play/pause, volume.
+- Local file drop from phone to `data/dropbox/` on the PC.
 
 ## Beginner Explanation
 
@@ -77,6 +79,14 @@ To customize phone shortcuts:
 4. The paired phone app refreshes shortcut buttons automatically within a few seconds.
 
 Saved shortcuts are stored locally in `data/shortcuts.json`. That file is gitignored.
+
+To transfer clipboard text, files, or links:
+
+1. Pair the phone.
+2. Open the `Clipboard / Files` tray.
+3. Use `Set PC Clipboard`, `Get PC Clipboard`, `Send Files`, or `Open`.
+
+Dropped files are saved on the PC in `data/dropbox/`. That folder is gitignored. Current limits are 5 files, 8 MB per file, and 16 MB total per upload.
 
 On your phone, install it like an app:
 

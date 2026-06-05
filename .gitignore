@@ -1,6 +1,7 @@
 node_modules/
 data/*.json
 data/*.local.*
+data/dropbox/
 .env
 .env.*
 *.pem

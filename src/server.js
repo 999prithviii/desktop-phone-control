@@ -11,6 +11,7 @@ const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, "..");
 const publicDir = path.join(rootDir, "public");
 const dataDir = path.join(rootDir, "data");
+const dropboxDir = path.join(dataDir, "dropbox");
 const shortcutsPath = path.join(dataDir, "shortcuts.json");
 const helperPath = path.join(__dirname, "control-helper.ps1");
 
@@ -25,6 +26,10 @@ const streamSession = {
   answer: null,
   updatedAt: 0
 };
+const MAX_CLIPBOARD_TEXT_LENGTH = 20000;
+const MAX_DROPPED_FILES = 5;
+const MAX_DROP_FILE_BYTES = 8 * 1024 * 1024;
+const MAX_DROP_TOTAL_BYTES = 16 * 1024 * 1024;
 
 const modifierKeyAllowlist = new Set(["ctrl", "alt", "shift", "win"]);
 const baseKeyAllowlist = new Set([
@@ -374,6 +379,60 @@ function saveShortcuts(nextShortcuts) {
   return cleanShortcuts;
 }
 
+function sanitizeFileName(value, fallback) {
+  const cleaned = String(value || "")
+    .replace(/[/\\:*?"<>|]/g, "-")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 120);
+  return cleaned || fallback;
+}
+
+function createDropFileName(originalName, index) {
+  const parsed = path.parse(sanitizeFileName(originalName, `file-${index + 1}`));
+  const base = (parsed.name || `file-${index + 1}`).slice(0, 80);
+  const ext = parsed.ext.slice(0, 20);
+  return `${new Date().toISOString().replace(/[:.]/g, "-")}-${index + 1}-${base}${ext}`;
+}
+
+function saveDroppedFiles(files) {
+  if (!Array.isArray(files)) throw new Error("files must be an array");
+  if (!files.length) throw new Error("no files selected");
+  if (files.length > MAX_DROPPED_FILES) throw new Error(`too many files; max ${MAX_DROPPED_FILES}`);
+
+  fs.mkdirSync(dropboxDir, { recursive: true });
+  let totalBytes = 0;
+
+  return files.map((file, index) => {
+    const data = String(file?.data || "");
+    if (!/^[A-Za-z0-9+/]*={0,2}$/.test(data)) throw new Error("invalid file data");
+
+    const buffer = Buffer.from(data, "base64");
+    totalBytes += buffer.length;
+    if (!buffer.length) throw new Error(`file ${index + 1} is empty`);
+    if (buffer.length > MAX_DROP_FILE_BYTES) throw new Error(`file ${index + 1} is too large`);
+    if (totalBytes > MAX_DROP_TOTAL_BYTES) throw new Error("total upload is too large");
+
+    const fileName = createDropFileName(file?.name, index);
+    const filePath = path.resolve(dropboxDir, fileName);
+    if (!filePath.startsWith(dropboxDir)) throw new Error("invalid file path");
+    fs.writeFileSync(filePath, buffer);
+
+    return {
+      name: fileName,
+      bytes: buffer.length
+    };
+  });
+}
+
+function normalizeOpenText(value) {
+  const text = String(value || "").trim().slice(0, 1000);
+  if (!text) return "";
+  if (/^[a-z][a-z0-9+.-]*:/i.test(text)) return text;
+  if (/^[^\s]+\.[^\s]+/.test(text)) return `https://${text}`;
+  return text;
+}
+
 function hasAdminKey(body) {
   return String(body.token || "") === adminKey;
 }
@@ -414,9 +473,20 @@ async function handleApi(req, res, pathname) {
     return;
   }
 
+  if (pathname === "/api/files/drop" && !isAuthorized(req)) {
+    sendJson(res, 401, { ok: false, error: "not paired" });
+    return;
+  }
+
   const body = await readJson(
     req,
-    pathname.startsWith("/api/stream/") || pathname.startsWith("/api/admin/") ? 65536 : 4096
+    pathname === "/api/files/drop"
+      ? MAX_DROP_TOTAL_BYTES * 2
+      : pathname === "/api/clipboard/set"
+        ? MAX_CLIPBOARD_TEXT_LENGTH + 1024
+      : pathname.startsWith("/api/stream/") || pathname.startsWith("/api/admin/")
+        ? 65536
+        : 4096
   );
 
   if (pathname === "/api/stream/publish-offer") {
@@ -596,6 +666,38 @@ async function handleApi(req, res, pathname) {
   if (pathname === "/api/type") {
     const text = String(body.text || "").slice(0, 500);
     await helper.send("type", { text });
+    sendJson(res, 200, { ok: true });
+    return;
+  }
+
+  if (pathname === "/api/clipboard/set") {
+    const text = String(body.text || "").slice(0, MAX_CLIPBOARD_TEXT_LENGTH);
+    await helper.send("clipboard-set", { text });
+    sendJson(res, 200, { ok: true, characters: text.length });
+    return;
+  }
+
+  if (pathname === "/api/clipboard/get") {
+    const text = String((await helper.send("clipboard-get"))?.text || "").slice(0, MAX_CLIPBOARD_TEXT_LENGTH);
+    sendJson(res, 200, { ok: true, text, characters: text.length });
+    return;
+  }
+
+  if (pathname === "/api/files/drop") {
+    const files = saveDroppedFiles(body.files);
+    sendJson(res, 200, { ok: true, files, directory: "data/dropbox" });
+    return;
+  }
+
+  if (pathname === "/api/open-link") {
+    const text = normalizeOpenText(body.text);
+    if (!text) {
+      sendJson(res, 400, { ok: false, error: "link is required" });
+      return;
+    }
+    await helper.send("key", { key: "ctrl+l" });
+    await helper.send("type", { text });
+    await helper.send("key", { key: "enter" });
     sendJson(res, 200, { ok: true });
     return;
   }

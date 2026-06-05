@@ -59,6 +59,9 @@ const TRAY_ORDER_KEY = "deskctl:shortcutTrayOrder";
 const TRAY_OPEN_KEY = "deskctl:shortcutTrayOpenId";
 const DEFAULT_OPEN_TRAY = "core";
 const BUILT_IN_SHORTCUT_IDS = new Set(["address-bar", "copy", "paste", "save", "undo", "desktop"]);
+const MAX_DROP_FILES = 5;
+const MAX_DROP_FILE_BYTES = 8 * 1024 * 1024;
+const MAX_DROP_TOTAL_BYTES = 16 * 1024 * 1024;
 
 const trayPresets = [
   {
@@ -112,6 +115,11 @@ const trayPresets = [
   {
     id: "text",
     title: "Text",
+    actions: []
+  },
+  {
+    id: "transfer",
+    title: "Clipboard / Files",
     actions: []
   },
   {
@@ -255,6 +263,11 @@ function createTrayBody(tray, actions) {
   const body = document.createElement("div");
   body.className = "shortcut-tray-body";
 
+  if (tray.id === "transfer") {
+    body.append(createTransferPanel());
+    return body;
+  }
+
   if (tray.id === "text") {
     body.classList.add("tray-stack");
     searchForm.classList.remove("hidden");
@@ -285,6 +298,181 @@ function createTrayBody(tray, actions) {
   }
   body.append(grid);
   return body;
+}
+
+function createTransferPanel() {
+  const panel = document.createElement("div");
+  panel.className = "transfer-panel";
+
+  const phoneClipboard = document.createElement("form");
+  phoneClipboard.className = "transfer-block";
+  const phoneLabel = document.createElement("strong");
+  phoneLabel.textContent = "Phone text -> PC clipboard";
+  const phoneText = document.createElement("textarea");
+  phoneText.maxLength = 20000;
+  phoneText.placeholder = "Paste or type text to put on the PC clipboard";
+  const setClipboard = document.createElement("button");
+  setClipboard.type = "submit";
+  setClipboard.textContent = "Set PC Clipboard";
+  phoneClipboard.append(phoneLabel, phoneText, setClipboard);
+  phoneClipboard.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    try {
+      setClipboard.disabled = true;
+      setTransferStatus("setting clipboard");
+      await api("/api/clipboard/set", { text: phoneText.value });
+      setTransferStatus("PC clipboard updated");
+    } catch (error) {
+      setTransferStatus(error.message);
+    } finally {
+      setClipboard.disabled = false;
+    }
+  });
+
+  const pcClipboard = document.createElement("section");
+  pcClipboard.className = "transfer-block";
+  const pcLabel = document.createElement("strong");
+  pcLabel.textContent = "PC clipboard -> phone";
+  const pcText = document.createElement("textarea");
+  pcText.readOnly = true;
+  pcText.placeholder = "Tap Get PC Clipboard";
+  const pcActions = document.createElement("div");
+  pcActions.className = "transfer-actions";
+  const getClipboard = document.createElement("button");
+  getClipboard.type = "button";
+  getClipboard.textContent = "Get PC Clipboard";
+  const copyPhone = document.createElement("button");
+  copyPhone.type = "button";
+  copyPhone.textContent = "Copy on Phone";
+  pcActions.append(getClipboard, copyPhone);
+  pcClipboard.append(pcLabel, pcText, pcActions);
+  getClipboard.addEventListener("click", async () => {
+    try {
+      getClipboard.disabled = true;
+      setTransferStatus("reading clipboard");
+      const data = await api("/api/clipboard/get");
+      pcText.value = data.text || "";
+      setTransferStatus(data.text ? "PC clipboard loaded" : "PC clipboard is empty");
+    } catch (error) {
+      setTransferStatus(error.message);
+    } finally {
+      getClipboard.disabled = false;
+    }
+  });
+  copyPhone.addEventListener("click", async () => {
+    if (!pcText.value) return;
+    try {
+      await navigator.clipboard.writeText(pcText.value);
+      setTransferStatus("copied on phone");
+    } catch {
+      pcText.focus();
+      pcText.select();
+      setTransferStatus("select text and copy manually");
+    }
+  });
+
+  const fileDrop = document.createElement("form");
+  fileDrop.className = "transfer-block";
+  const fileLabel = document.createElement("strong");
+  fileLabel.textContent = "Phone files -> PC";
+  const fileInput = document.createElement("input");
+  fileInput.type = "file";
+  fileInput.multiple = true;
+  const uploadFiles = document.createElement("button");
+  uploadFiles.type = "submit";
+  uploadFiles.textContent = "Send Files";
+  fileDrop.append(fileLabel, fileInput, uploadFiles);
+  fileDrop.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    try {
+      uploadFiles.disabled = true;
+      const files = [...fileInput.files];
+      const payload = await readDropFiles(files);
+      setTransferStatus("sending files");
+      const result = await api("/api/files/drop", { files: payload });
+      fileInput.value = "";
+      setTransferStatus(`saved ${result.files.length} file(s) to data/dropbox`);
+    } catch (error) {
+      setTransferStatus(error.message);
+    } finally {
+      uploadFiles.disabled = false;
+    }
+  });
+
+  const openLink = document.createElement("form");
+  openLink.className = "transfer-block";
+  const linkLabel = document.createElement("strong");
+  linkLabel.textContent = "Open phone link on desktop";
+  const linkRow = document.createElement("div");
+  linkRow.className = "text-row";
+  const linkInput = document.createElement("input");
+  linkInput.type = "text";
+  linkInput.inputMode = "url";
+  linkInput.placeholder = "https://example.com";
+  const linkButton = document.createElement("button");
+  linkButton.type = "submit";
+  linkButton.textContent = "Open";
+  linkRow.append(linkInput, linkButton);
+  openLink.append(linkLabel, linkRow);
+  openLink.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const text = linkInput.value.trim();
+    if (!text) return;
+    try {
+      linkButton.disabled = true;
+      setTransferStatus("opening link");
+      await api("/api/open-link", { text });
+      linkInput.value = "";
+      setTransferStatus("opened on desktop");
+    } catch (error) {
+      setTransferStatus(error.message);
+    } finally {
+      linkButton.disabled = false;
+    }
+  });
+
+  const status = document.createElement("span");
+  status.id = "transferStatus";
+  status.className = "micro-status";
+  status.textContent = "idle";
+
+  panel.append(phoneClipboard, pcClipboard, fileDrop, openLink, status);
+  return panel;
+}
+
+function setTransferStatus(text) {
+  const status = document.querySelector("#transferStatus");
+  if (status) status.textContent = text;
+}
+
+function readFileAsBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+      const result = String(reader.result || "");
+      resolve(result.includes(",") ? result.split(",").pop() : result);
+    });
+    reader.addEventListener("error", () => reject(reader.error || new Error("file read failed")));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function readDropFiles(files) {
+  if (!files.length) throw new Error("choose at least one file");
+  if (files.length > MAX_DROP_FILES) throw new Error(`max ${MAX_DROP_FILES} files`);
+  const total = files.reduce((sum, file) => sum + file.size, 0);
+  if (total > MAX_DROP_TOTAL_BYTES) throw new Error("total upload is too large");
+
+  const payload = [];
+  for (const file of files) {
+    if (file.size > MAX_DROP_FILE_BYTES) throw new Error(`${file.name} is too large`);
+    payload.push({
+      name: file.name,
+      type: file.type,
+      data: await readFileAsBase64(file)
+    });
+  }
+  return payload;
 }
 
 function startTrayDrag(event, trayElement) {
@@ -372,7 +560,7 @@ function renderShortcutDeck() {
 
     const meta = document.createElement("span");
     meta.className = "tray-meta";
-    meta.textContent = tray.id === "text" || tray.id === "admin" ? "" : String(actions.length);
+    meta.textContent = tray.id === "text" || tray.id === "transfer" || tray.id === "admin" ? "" : String(actions.length);
 
     const chevron = document.createElement("span");
     chevron.className = "tray-chevron";

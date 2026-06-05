@@ -188,6 +188,23 @@ function Send-Text {
   }
 }
 
+function Set-ClipboardText {
+  param([string] $Text)
+  if ([string]::IsNullOrEmpty($Text)) {
+    [System.Windows.Forms.Clipboard]::Clear()
+    return
+  }
+  [System.Windows.Forms.Clipboard]::SetText($Text)
+}
+
+function Get-ClipboardText {
+  try {
+    return [System.Windows.Forms.Clipboard]::GetText()
+  } catch {
+    return ""
+  }
+}
+
 while ($null -ne ($line = [Console]::In.ReadLine())) {
   if ([string]::IsNullOrWhiteSpace($line)) {
     continue
@@ -250,6 +267,18 @@ while ($null -ne ($line = [Console]::In.ReadLine())) {
     if ($action -eq "type") {
       Send-Text ([string]$cmd.text)
       Write-Response -Id $id -Ok $true
+      continue
+    }
+
+    if ($action -eq "clipboard-set") {
+      Set-ClipboardText ([string]$cmd.text)
+      Write-Response -Id $id -Ok $true
+      continue
+    }
+
+    if ($action -eq "clipboard-get") {
+      $text = Get-ClipboardText
+      Write-Response -Id $id -Ok $true -Data @{ text = $text }
       continue
     }
 
