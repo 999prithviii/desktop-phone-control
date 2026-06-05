@@ -4,7 +4,7 @@ Local-first phone controller for a Windows desktop.
 
 Built by Prithvi — Designer & Builder  
 GitHub: [@999prithviii](https://github.com/999prithviii)  
-Version: `0.1.26`
+Version: `0.1.27`
 
 Update log: [UPDATE_LOG.md](UPDATE_LOG.md)
 
@@ -95,8 +95,10 @@ If double-click does not work, use PowerShell:
 
 ```powershell
 cd path\to\desktop-phone-control
-npm start
+npm.cmd start
 ```
+
+Plain `npm start` can be blocked on some Windows machines because PowerShell may resolve `npm` to `npm.ps1`. `npm.cmd start` avoids that script-policy problem.
 
 The terminal will print:
 
@@ -117,7 +119,7 @@ Use the LAN URL, not `127.0.0.1`. `127.0.0.1` only works on the PC itself.
 ### Step 5: Common First-Run Problems
 
 - `npm` is not recognized: Node.js is not installed, or the terminal needs to be restarted.
-- PowerShell script policy error: use `start-desktop-control.cmd` or run `npm start`.
+- PowerShell script policy error: use `start-desktop-control.cmd` or run `npm.cmd start`.
 - Phone cannot connect: check same Wi-Fi, allow the Windows Firewall prompt for Node.js, and use the LAN URL.
 - App looks outdated: refresh the phone browser, close/reopen the PWA, or restart the server to clear old cache.
 - Closing the terminal stops the app: this is normal in the alpha build.
@@ -132,7 +134,7 @@ When adding friends later, use GitHub `Write` access by default. `Write` lets th
 
 ```powershell
 cd path\to\desktop-phone-control
-npm start
+npm.cmd start
 ```
 
 Open the printed LAN URL on your phone, then enter the pairing code shown in the terminal.
@@ -189,7 +191,7 @@ Mouse movement is optimized to batch phone input per animation frame and queue o
 ```powershell
 $env:DESKCTL_HOST="0.0.0.0"
 $env:DESKCTL_PORT="8789"
-npm start
+npm.cmd start
 ```
 
 Defaults:

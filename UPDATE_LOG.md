@@ -6,7 +6,7 @@ This log only includes product-safe public summaries. It does not include local 
 
 ## Current Version
 
-- `v0.1.26`
+- `v0.1.27`
 
 ## v0.0.0 -> v0.1.14 - Prototype Foundation
 
@@ -95,6 +95,13 @@ This log only includes product-safe public summaries. It does not include local 
 - Added phone link open on desktop.
 - Added file upload limits and ignored local drop folder.
 - Added beginner startup guide for collaborators.
+
+## v0.1.27 - QA Fixes
+
+- Updated Windows startup docs to prefer `npm.cmd start` in PowerShell.
+- Fixed first-run sensitivity so new phones start at `2.6x`.
+- Kept saved sensitivity values working for existing users.
+- Returned proper client errors for malformed JSON, oversized bodies, invalid shortcut saves, and invalid file drops.
 
 ## Notes For Testers
 

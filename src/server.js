@@ -31,6 +31,13 @@ const MAX_DROPPED_FILES = 5;
 const MAX_DROP_FILE_BYTES = 8 * 1024 * 1024;
 const MAX_DROP_TOTAL_BYTES = 16 * 1024 * 1024;
 
+class HttpError extends Error {
+  constructor(status, message) {
+    super(message);
+    this.status = status;
+  }
+}
+
 const modifierKeyAllowlist = new Set(["ctrl", "alt", "shift", "win"]);
 const baseKeyAllowlist = new Set([
   "esc",
@@ -288,13 +295,17 @@ async function readJson(req, maxBytes = 4096) {
   let size = 0;
   for await (const chunk of req) {
     size += chunk.length;
-    if (size > maxBytes) throw new Error("request body too large");
+    if (size > maxBytes) throw new HttpError(413, "request body too large");
     chunks.push(chunk);
   }
 
   const text = Buffer.concat(chunks).toString("utf8");
   if (!text) return {};
-  return JSON.parse(text);
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new HttpError(400, "invalid JSON");
+  }
 }
 
 function normalizeNumber(value, min, max) {
@@ -541,8 +552,12 @@ async function handleApi(req, res, pathname) {
       return;
     }
 
-    shortcuts = saveShortcuts(body.shortcuts);
-    sendJson(res, 200, { ok: true, shortcuts });
+    try {
+      shortcuts = saveShortcuts(body.shortcuts);
+      sendJson(res, 200, { ok: true, shortcuts });
+    } catch (error) {
+      sendJson(res, 400, { ok: false, error: error.message || "invalid shortcuts" });
+    }
     return;
   }
 
@@ -753,7 +768,8 @@ const server = http.createServer(async (req, res) => {
     }
     serveStatic(req, res, url.pathname);
   } catch (error) {
-    sendJson(res, 500, { ok: false, error: error.message || "server error" });
+    const status = Number.isInteger(error.status) ? error.status : 500;
+    sendJson(res, status, { ok: false, error: error.message || "server error" });
   }
 });
 

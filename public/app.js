@@ -1008,9 +1008,12 @@ if (adminToken) {
   pairPanel.classList.add("hidden");
 }
 
-const savedSensitivity = Number(localStorage.getItem("deskctl:sensitivity"));
-if (Number.isFinite(savedSensitivity)) {
-  sensitivity.value = String(Math.max(0.8, Math.min(5, savedSensitivity)));
+const savedSensitivityRaw = localStorage.getItem("deskctl:sensitivity");
+if (savedSensitivityRaw !== null) {
+  const savedSensitivity = Number(savedSensitivityRaw);
+  if (Number.isFinite(savedSensitivity)) {
+    sensitivity.value = String(Math.max(0.8, Math.min(5, savedSensitivity)));
+  }
 }
 updateSensitivityLabel();
 
