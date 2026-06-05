@@ -36,23 +36,95 @@ This MVP turns your phone browser into a touchpad and keyboard for your laptop. 
 - Common keys: Escape, Space, Enter, `F`, `F11`, media play/pause, volume.
 - Local file drop from phone to `data/dropbox/` on the PC.
 
-## Beginner Explanation
+## Beginner Startup Guide
 
-Desktop Phone Control lets you use your phone like a small remote control for your Windows laptop.
+This guide is for friends/collaborators who do not use PowerShell every day.
 
-What it does:
+### What This App Does
 
-- Your laptop runs the desktop controller.
-- Your phone opens a local web app in the browser.
-- After pairing, your phone can move the mouse, click, scroll, type text, run shortcuts, and connect to a live screen stream.
-- Shortcut menus can be arranged into modes like Core, Browser, Media / Spotify, and Edit / DaVinci.
+Desktop Phone Control lets your phone act like a small remote for a Windows laptop. Your laptop runs the desktop controller, and your phone opens the local phone app in a browser.
 
-Important:
+After pairing, the phone can move the mouse, click, scroll, type text, run shortcuts, transfer clipboard text/files, and connect to a live screen stream.
 
-- This works on the same Wi-Fi network only.
-- The app is not meant to be exposed online.
-- Closing the terminal stops the controller.
-- Restarting the app creates fresh private pairing/admin/stream links.
+### Before You Start
+
+You need:
+
+- A Windows PC.
+- A phone on the same Wi-Fi as the PC.
+- Google Chrome or another modern browser.
+- Node.js `22` or newer installed on the PC.
+- Access to this private GitHub repository.
+
+Mac note: Mac users can clone/read the repo, but full desktop control is currently Windows-only. Mac support needs a macOS helper later.
+
+### Step 1: Install Node.js
+
+1. Go to [nodejs.org](https://nodejs.org/).
+2. Download the current LTS version.
+3. Install it with the default options.
+4. Restart PowerShell, Terminal, or your PC if `npm` is not recognized later.
+
+### Step 2: Get The Project
+
+If you use GitHub Desktop:
+
+1. Open GitHub Desktop.
+2. Click `File` -> `Clone repository`.
+3. Choose this repo: `999prithviii/desktop-phone-control`.
+4. Click `Clone`.
+
+If you use the command line:
+
+```powershell
+git clone https://github.com/999prithviii/desktop-phone-control.git
+cd desktop-phone-control
+```
+
+### Step 3: Start The App On Windows
+
+Easiest option:
+
+1. Open the project folder.
+2. Double-click `start-desktop-control.cmd`.
+3. Keep the black terminal window open.
+
+If double-click does not work, use PowerShell:
+
+```powershell
+cd path\to\desktop-phone-control
+npm start
+```
+
+The terminal will print:
+
+- a pairing code
+- one or more phone URLs
+- a private admin URL
+- a private stream sender URL
+
+### Step 4: Connect Your Phone
+
+1. Make sure the phone and PC are on the same Wi-Fi.
+2. On the phone, open the LAN URL printed in the terminal.
+3. Enter the pairing code.
+4. Keep the terminal open while using the app.
+
+Use the LAN URL, not `127.0.0.1`. `127.0.0.1` only works on the PC itself.
+
+### Step 5: Common First-Run Problems
+
+- `npm` is not recognized: Node.js is not installed, or the terminal needs to be restarted.
+- PowerShell script policy error: use `start-desktop-control.cmd` or run `npm start`.
+- Phone cannot connect: check same Wi-Fi, allow the Windows Firewall prompt for Node.js, and use the LAN URL.
+- App looks outdated: refresh the phone browser, close/reopen the PWA, or restart the server to clear old cache.
+- Closing the terminal stops the app: this is normal in the alpha build.
+
+### Collaborator Access
+
+This source repo should stay private.
+
+When adding friends later, use GitHub `Write` access by default. `Write` lets them push code branches without changing repo settings. Do not give `Admin` access unless they are trusted to manage repository settings and collaborators.
 
 ## Run
 
