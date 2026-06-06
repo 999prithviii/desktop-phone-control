@@ -6,7 +6,7 @@ This log only includes product-safe public summaries. It does not include local 
 
 ## Current Version
 
-- `v0.1.29`
+- `v0.1.30`
 
 ## v0.0.0 -> v0.1.14 - Prototype Foundation
 
@@ -121,6 +121,12 @@ This log only includes product-safe public summaries. It does not include local 
 - Fixed sender answer polling cleanup after a stream is stopped.
 - Avoided caching token-bearing admin and sender URLs.
 - Clarified that full PWA installation requires HTTPS outside localhost.
+
+## v0.1.30 - Pairing Lockout Tightening
+
+- Reduced the pairing failure allowance from eight attempts to three per device.
+- Increased the pairing lockout window from one minute to five minutes.
+- Further pairing attempts return `429` until the five-minute window expires.
 
 ## Notes For Testers
 

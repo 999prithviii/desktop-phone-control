@@ -19,7 +19,7 @@ This app controls your mouse and keyboard. Treat it as high-risk local tooling.
 
 - Proprietary license and private-source launch posture.
 - Random pairing code on every server start.
-- Per-device throttling for repeated wrong pairing codes.
+- Per-device pairing lockout after three wrong codes within five minutes. Further attempts are blocked until the five-minute window expires.
 - Random session token stored as an HTTP-only cookie.
 - API actions require pairing.
 - Basic same-origin checks.

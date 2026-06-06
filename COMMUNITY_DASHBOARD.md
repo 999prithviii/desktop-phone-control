@@ -6,12 +6,18 @@ No private paths, pairing codes, tokens, screenshots, or personal test data are 
 
 ## Current Build
 
-- Version: `v0.1.29`
+- Version: `v0.1.30`
 - Platform: Windows desktop control
 - Startup recommendation on Windows PowerShell: `npm.cmd start`
 - Safety rule: trusted local Wi-Fi only
 
 ## Latest QA Findings And Fixes
+
+### Fixed In v0.1.30
+
+| Area | What Was Found | What Was Fixed | Status |
+| --- | --- | --- | --- |
+| Pairing | Eight attempts and a one-minute window were too permissive. | Devices are now locked out after three failed codes within five minutes. | Fixed |
 
 ### Fixed In v0.1.29
 

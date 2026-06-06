@@ -30,8 +30,8 @@ const MAX_CLIPBOARD_TEXT_LENGTH = 20000;
 const MAX_DROPPED_FILES = 5;
 const MAX_DROP_FILE_BYTES = 8 * 1024 * 1024;
 const MAX_DROP_TOTAL_BYTES = 16 * 1024 * 1024;
-const PAIR_ATTEMPT_LIMIT = 8;
-const PAIR_ATTEMPT_WINDOW_MS = 60 * 1000;
+const PAIR_ATTEMPT_LIMIT = 3;
+const PAIR_ATTEMPT_WINDOW_MS = 5 * 60 * 1000;
 const pairAttempts = new Map();
 
 class HttpError extends Error {

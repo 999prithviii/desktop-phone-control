@@ -5,7 +5,7 @@ This file explains the latest QA issue, what changed, and how another tester or 
 ## Current State
 
 - Project status: pre-release alpha
-- Current version: `v0.1.29`
+- Current version: `v0.1.30`
 - Source repo should remain private.
 - Recommended Windows startup command is:
 
@@ -82,6 +82,12 @@ The backend now uses a small HTTP error path so expected validation failures do 
 - Sender answer polling stops cleanly when the stream is closed.
 - Token-bearing URLs are not stored in the service-worker cache.
 - PWA documentation now states that full installation requires HTTPS outside localhost.
+
+## Fixes Applied In v0.1.30
+
+- Each device gets three incorrect pairing attempts within a five-minute window.
+- After the third failure, further pairing requests return `429`.
+- The lockout clears when the oldest failure falls outside the five-minute window.
 
 ## Verification Steps
 
