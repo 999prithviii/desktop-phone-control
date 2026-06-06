@@ -117,6 +117,30 @@ If the phone browser closes or goes inactive, reopen the phone controller from t
 - App looks outdated: refresh the phone browser, close/reopen the PWA, or restart the server to clear old cache.
 - Closing the terminal stops the app: this is normal in the alpha build.
 
+### Using Codex Or Claude Code
+
+If you are inexperienced, you can open this project in Codex or Claude Code and ask it to help you run the app. Use a local coding agent that can read the folder and run terminal commands on your PC.
+
+Good startup prompt:
+
+```text
+I am on Windows and I want to run this desktop-phone-control project. Please inspect the README, check that Node.js 22 or newer is installed, start the app with npm.cmd start or start-desktop-control.cmd, and explain which URL or QR code I should use on my phone. Do not create public tunnels, change code, tag releases, or push anything unless I explicitly ask.
+```
+
+Good troubleshooting prompt:
+
+```text
+The phone cannot connect to desktop-phone-control. Please check that the server is running, confirm the PC and phone are on the same Wi-Fi, verify the LAN URL and port 8789, and help me test the Connect dashboard. Do not expose the app to the public internet.
+```
+
+Good safe-change prompt:
+
+```text
+Please make a small change to desktop-phone-control. Before editing, check git status. Keep the current pairing, QR, reconnect, shortcut, mouse, keyboard, and stream flows working. After editing, run the static checks from RELEASE_CHECKLIST.md and summarize exactly what changed.
+```
+
+Do not paste private setup URLs, admin URLs, pairing codes, or screen-share sender URLs into public chat rooms. They are temporary local-control secrets for your current app run.
+
 ### Collaborator Access
 
 This source repo should stay private.
