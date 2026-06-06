@@ -1,4 +1,4 @@
-const CACHE_NAME = "desktop-control-v0.1.28";
+const CACHE_NAME = "desktop-control-v0.1.29";
 const ASSETS = [
   "/",
   "/index.html",
@@ -35,6 +35,7 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   if (event.request.method !== "GET") return;
   if (url.pathname.startsWith("/api/")) return;
+  if (url.search) return;
 
   event.respondWith(
     fetch(event.request).then((response) => {

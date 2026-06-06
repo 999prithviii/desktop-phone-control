@@ -6,12 +6,24 @@ No private paths, pairing codes, tokens, screenshots, or personal test data are 
 
 ## Current Build
 
-- Version: `v0.1.28`
+- Version: `v0.1.29`
 - Platform: Windows desktop control
 - Startup recommendation on Windows PowerShell: `npm.cmd start`
 - Safety rule: trusted local Wi-Fi only
 
 ## Latest QA Findings And Fixes
+
+### Fixed In v0.1.29
+
+| Area | What Was Found | What Was Fixed | Status |
+| --- | --- | --- | --- |
+| Pairing | Pairing attempts had no throttle. | Added a per-device attempt limit and `429` retry response. | Fixed |
+| Mouse safety | Held buttons could survive interrupted phone sessions. | Added lifecycle, panic, and server-shutdown release handling. | Fixed |
+| Static files | A prefix-only path check could allow encoded traversal into similarly named sibling folders. | Replaced it with a path-relative containment check. | Fixed |
+| File drops | A failed multi-file request could leave earlier files behind. | All files are validated before writing, with rollback on write failure. | Fixed |
+| Clipboard | Paste-based typing restored only text clipboard data. | Full available clipboard formats are captured and restored. | Fixed |
+| Stream UI | Connection errors were immediately replaced with `stopped`. | Cleanup now preserves the useful error message. | Fixed |
+| PWA docs | Plain HTTP LAN startup was described as a full PWA install path. | Docs now distinguish home-screen shortcuts from HTTPS-backed PWA installation. | Fixed |
 
 ### Fixed In v0.1.28
 

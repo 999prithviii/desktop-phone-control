@@ -6,7 +6,7 @@ This log only includes product-safe public summaries. It does not include local 
 
 ## Current Version
 
-- `v0.1.28`
+- `v0.1.29`
 
 ## v0.0.0 -> v0.1.14 - Prototype Foundation
 
@@ -109,6 +109,18 @@ This log only includes product-safe public summaries. It does not include local 
 - Added gesture cleanup for cancelled touches, lost pointer capture, page blur, hidden tabs, and page unload.
 - Added stale gesture reset when a new primary touch begins after an interrupted touch sequence.
 - Bumped the app cache so phones pull the new touchpad logic.
+
+## v0.1.29 - Safety And Reliability Hardening
+
+- Added per-device pairing-attempt throttling.
+- Added global and shutdown mouse-button release handling.
+- Fixed static-file path containment for encoded traversal paths.
+- Made multi-file uploads validate fully before writing and roll back partial writes.
+- Preserved full clipboard formats when temporary paste-based typing runs.
+- Kept stream connection errors visible instead of replacing them with `stopped`.
+- Fixed sender answer polling cleanup after a stream is stopped.
+- Avoided caching token-bearing admin and sender URLs.
+- Clarified that full PWA installation requires HTTPS outside localhost.
 
 ## Notes For Testers
 

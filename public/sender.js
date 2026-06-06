@@ -6,7 +6,6 @@ const streamToken = new URL(location.href).searchParams.get("token") || "";
 
 let peer = null;
 let localStream = null;
-let answerPoll = null;
 
 function setStatus(text) {
   senderStatus.textContent = text;
@@ -46,11 +45,12 @@ function waitForIceComplete(connection) {
   });
 }
 
-async function pollForAnswer() {
-  while (peer && !peer.currentRemoteDescription) {
+async function pollForAnswer(connection) {
+  while (peer === connection && !connection.currentRemoteDescription) {
     const data = await post("/api/stream/read-answer", { token: streamToken });
+    if (peer !== connection) return;
     if (data.answer) {
-      await peer.setRemoteDescription(data.answer);
+      await connection.setRemoteDescription(data.answer);
       setStatus("streaming");
       return;
     }
@@ -59,12 +59,7 @@ async function pollForAnswer() {
   }
 }
 
-async function stopStreaming({ notify = true } = {}) {
-  if (answerPoll) {
-    clearTimeout(answerPoll);
-    answerPoll = null;
-  }
-
+async function stopStreaming({ notify = true, status = "stopped" } = {}) {
   if (localStream) {
     for (const track of localStream.getTracks()) track.stop();
     localStream = null;
@@ -78,7 +73,7 @@ async function stopStreaming({ notify = true } = {}) {
   localPreview.srcObject = null;
   startShare.disabled = false;
   stopShare.disabled = true;
-  setStatus("stopped");
+  setStatus(status);
 
   if (notify && streamToken) {
     await post("/api/stream/stop-sender", { token: streamToken }).catch(() => {});
@@ -134,14 +129,15 @@ async function startStreaming() {
     });
 
     setStatus("waiting for phone");
-    void pollForAnswer().catch((error) => {
+    const activePeer = peer;
+    void pollForAnswer(activePeer).catch((error) => {
+      if (peer !== activePeer) return;
       console.error(error);
       setStatus(error.message);
     });
   } catch (error) {
     console.error(error);
-    setStatus(error.message);
-    await stopStreaming({ notify: true });
+    await stopStreaming({ notify: true, status: error.message });
   }
 }
 

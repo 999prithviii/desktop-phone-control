@@ -4,7 +4,7 @@ Local-first phone controller for a Windows desktop.
 
 Built by Prithvi — Designer & Builder  
 GitHub: [@999prithviii](https://github.com/999prithviii)  
-Version: `0.1.28`
+Version: `0.1.29`
 
 Community dashboard: [COMMUNITY_DASHBOARD.md](COMMUNITY_DASHBOARD.md)
 Update log: [UPDATE_LOG.md](UPDATE_LOG.md)
@@ -165,10 +165,12 @@ To transfer clipboard text, files, or links:
 
 Dropped files are saved on the PC in `data/dropbox/`. That folder is gitignored. Current limits are 5 files, 8 MB per file, and 16 MB total per upload.
 
-On your phone, install it like an app:
+On your phone, you can add the controller to your home screen:
 
-- Android Chrome: three-dot menu -> `Add to Home screen` or `Install app`.
+- Android Chrome: three-dot menu -> `Add to Home screen`.
 - iPhone Safari: Share -> `Add to Home Screen`.
+
+The printed LAN URL uses plain HTTP. Browsers require HTTPS for service workers and full PWA installation outside localhost, so the LAN version may be added as a browser shortcut rather than a fully offline-capable PWA.
 
 On Windows, you can start it with:
 

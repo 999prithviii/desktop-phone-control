@@ -30,6 +30,9 @@ const MAX_CLIPBOARD_TEXT_LENGTH = 20000;
 const MAX_DROPPED_FILES = 5;
 const MAX_DROP_FILE_BYTES = 8 * 1024 * 1024;
 const MAX_DROP_TOTAL_BYTES = 16 * 1024 * 1024;
+const PAIR_ATTEMPT_LIMIT = 8;
+const PAIR_ATTEMPT_WINDOW_MS = 60 * 1000;
+const pairAttempts = new Map();
 
 class HttpError extends Error {
   constructor(status, message) {
@@ -96,6 +99,7 @@ class ControlHelper {
     this.moveInFlight = false;
     this.queuedScrollAmount = 0;
     this.scrollInFlight = false;
+    this.available = true;
     this.child = spawn("powershell.exe", [
       "-NoProfile",
       "-ExecutionPolicy",
@@ -115,13 +119,26 @@ class ControlHelper {
       const text = chunk.trim();
       if (text) console.error(`[helper] ${text}`);
     });
-    this.child.on("exit", (code) => {
-      for (const { reject, timeout } of this.pending.values()) {
-        clearTimeout(timeout);
-        reject(new Error(`control helper exited with code ${code}`));
-      }
-      this.pending.clear();
+    this.child.on("error", (error) => {
+      this.available = false;
+      this.rejectPending(`control helper failed: ${error.message}`);
     });
+    this.child.on("exit", (code) => {
+      this.available = false;
+      this.rejectPending(`control helper exited with code ${code}`);
+    });
+    this.child.stdin.on("error", (error) => {
+      this.available = false;
+      this.rejectPending(`control helper input failed: ${error.message}`);
+    });
+  }
+
+  rejectPending(message) {
+    for (const { reject, timeout } of this.pending.values()) {
+      clearTimeout(timeout);
+      reject(new Error(message));
+    }
+    this.pending.clear();
   }
 
   onStdout(chunk) {
@@ -157,7 +174,7 @@ class ControlHelper {
   }
 
   send(action, payload = {}) {
-    if (!this.child || this.child.killed) {
+    if (!this.child || this.child.killed || !this.available) {
       return Promise.reject(new Error("control helper is not running"));
     }
 
@@ -171,12 +188,19 @@ class ControlHelper {
       }, 5000);
 
       this.pending.set(id, { resolve, reject, timeout });
-      this.child.stdin.write(`${JSON.stringify(command)}\n`, "utf8");
+      this.child.stdin.write(`${JSON.stringify(command)}\n`, "utf8", (error) => {
+        if (!error) return;
+        const entry = this.pending.get(id);
+        if (!entry) return;
+        clearTimeout(entry.timeout);
+        this.pending.delete(id);
+        entry.reject(error);
+      });
     });
   }
 
   enqueueMove(dx, dy) {
-    if (!this.child || this.child.killed) {
+    if (!this.child || this.child.killed || !this.available) {
       throw new Error("control helper is not running");
     }
 
@@ -208,7 +232,7 @@ class ControlHelper {
   }
 
   enqueueScroll(amount) {
-    if (!this.child || this.child.killed) {
+    if (!this.child || this.child.killed || !this.available) {
       throw new Error("control helper is not running");
     }
 
@@ -275,6 +299,41 @@ function parseCookies(header) {
 
 function isAuthorized(req) {
   return parseCookies(req.headers.cookie).get("deskctl") === sessionToken;
+}
+
+function getClientAddress(req) {
+  return String(req.socket.remoteAddress || "unknown").replace(/^::ffff:/, "");
+}
+
+function getPairRetryAfter(req) {
+  const address = getClientAddress(req);
+  const now = Date.now();
+  const recent = (pairAttempts.get(address) || []).filter(
+    (attemptedAt) => now - attemptedAt < PAIR_ATTEMPT_WINDOW_MS
+  );
+
+  if (!recent.length) {
+    pairAttempts.delete(address);
+    return 0;
+  }
+
+  pairAttempts.set(address, recent);
+  if (recent.length < PAIR_ATTEMPT_LIMIT) return 0;
+  return Math.max(1, Math.ceil((PAIR_ATTEMPT_WINDOW_MS - (now - recent[0])) / 1000));
+}
+
+function recordPairFailure(req) {
+  const address = getClientAddress(req);
+  const now = Date.now();
+  const recent = (pairAttempts.get(address) || []).filter(
+    (attemptedAt) => now - attemptedAt < PAIR_ATTEMPT_WINDOW_MS
+  );
+  recent.push(now);
+  pairAttempts.set(address, recent);
+}
+
+function clearPairFailures(req) {
+  pairAttempts.delete(getClientAddress(req));
 }
 
 function assertSameOrigin(req) {
@@ -406,15 +465,18 @@ function createDropFileName(originalName, index) {
   return `${new Date().toISOString().replace(/[:.]/g, "-")}-${index + 1}-${base}${ext}`;
 }
 
+function isPathInside(parentPath, candidatePath) {
+  const relative = path.relative(parentPath, candidatePath);
+  return relative !== "" && relative !== ".." && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
+}
+
 function saveDroppedFiles(files) {
   if (!Array.isArray(files)) throw new Error("files must be an array");
   if (!files.length) throw new Error("no files selected");
   if (files.length > MAX_DROPPED_FILES) throw new Error(`too many files; max ${MAX_DROPPED_FILES}`);
 
-  fs.mkdirSync(dropboxDir, { recursive: true });
   let totalBytes = 0;
-
-  return files.map((file, index) => {
+  const stagedFiles = files.map((file, index) => {
     const data = String(file?.data || "");
     if (!/^[A-Za-z0-9+/]*={0,2}$/.test(data)) throw new Error("invalid file data");
 
@@ -426,14 +488,33 @@ function saveDroppedFiles(files) {
 
     const fileName = createDropFileName(file?.name, index);
     const filePath = path.resolve(dropboxDir, fileName);
-    if (!filePath.startsWith(dropboxDir)) throw new Error("invalid file path");
-    fs.writeFileSync(filePath, buffer);
+    if (!isPathInside(dropboxDir, filePath)) throw new Error("invalid file path");
 
     return {
       name: fileName,
-      bytes: buffer.length
+      bytes: buffer.length,
+      buffer,
+      filePath
     };
   });
+
+  fs.mkdirSync(dropboxDir, { recursive: true });
+  const writtenPaths = [];
+  try {
+    for (const file of stagedFiles) {
+      fs.writeFileSync(file.filePath, file.buffer);
+      writtenPaths.push(file.filePath);
+    }
+  } catch (error) {
+    for (const writtenPath of writtenPaths) {
+      try {
+        fs.rmSync(writtenPath, { force: true });
+      } catch {}
+    }
+    throw error;
+  }
+
+  return stagedFiles.map(({ name, bytes }) => ({ name, bytes }));
 }
 
 function normalizeOpenText(value) {
@@ -562,11 +643,20 @@ async function handleApi(req, res, pathname) {
   }
 
   if (pathname === "/api/pair") {
+    const retryAfter = getPairRetryAfter(req);
+    if (retryAfter > 0) {
+      res.setHeader("retry-after", String(retryAfter));
+      sendJson(res, 429, { ok: false, error: "too many pairing attempts", retryAfter });
+      return;
+    }
+
     if (String(body.code || "") !== pairCode) {
+      recordPairFailure(req);
       sendJson(res, 401, { ok: false, error: "wrong pairing code" });
       return;
     }
 
+    clearPairFailures(req);
     res.writeHead(200, {
       "content-type": "application/json; charset=utf-8",
       "set-cookie": `deskctl=${encodeURIComponent(sessionToken)}; HttpOnly; SameSite=Strict; Path=/`,
@@ -660,6 +750,15 @@ async function handleApi(req, res, pathname) {
     return;
   }
 
+  if (pathname === "/api/mouse/release-all") {
+    await Promise.allSettled([
+      helper.send("mouse", { button: "left", kind: "up" }),
+      helper.send("mouse", { button: "right", kind: "up" })
+    ]);
+    sendJson(res, 200, { ok: true });
+    return;
+  }
+
   if (pathname === "/api/scroll") {
     const amount = normalizeNumber(body.amount, -1200, 1200);
     helper.enqueueScroll(amount);
@@ -737,7 +836,7 @@ function serveStatic(req, res, pathname) {
   const safePath = pathname === "/" ? "/index.html" : pathname;
   const decoded = decodeURIComponent(safePath);
   const filePath = path.resolve(publicDir, `.${decoded}`);
-  if (!filePath.startsWith(publicDir)) {
+  if (!isPathInside(publicDir, filePath)) {
     res.writeHead(403);
     res.end("Forbidden");
     return;
@@ -773,6 +872,12 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
+server.on("error", (error) => {
+  console.error(`Desktop Phone Control failed to start: ${error.message}`);
+  helper.child?.kill();
+  process.exitCode = 1;
+});
+
 server.on("connection", (socket) => {
   socket.setNoDelay(true);
 });
@@ -797,7 +902,24 @@ server.listen(port, host, () => {
   console.log("");
 });
 
-process.on("SIGINT", () => {
+let shuttingDown = false;
+
+async function shutdown() {
+  if (shuttingDown) return;
+  shuttingDown = true;
+
+  await Promise.allSettled([
+    helper.send("mouse", { button: "left", kind: "up" }),
+    helper.send("mouse", { button: "right", kind: "up" })
+  ]);
   helper.child?.kill();
   server.close(() => process.exit(0));
+  setTimeout(() => process.exit(0), 1000).unref();
+}
+
+process.on("SIGINT", () => {
+  void shutdown();
+});
+process.on("SIGTERM", () => {
+  void shutdown();
 });

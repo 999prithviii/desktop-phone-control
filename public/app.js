@@ -38,6 +38,7 @@ let scrollFrame = 0;
 let scrollInFlight = false;
 let leftHeld = false;
 let autoDrag = false;
+const pressedMouseButtons = new Set();
 let longPressTimer = null;
 let streamPeer = null;
 let remoteMediaStream = null;
@@ -600,6 +601,11 @@ async function toggleLeftHold() {
   setHoldLeftUi();
   try {
     await api("/api/mouse", { button: "left", kind: nextState ? "down" : "up" });
+    if (nextState) {
+      pressedMouseButtons.add("left");
+    } else {
+      pressedMouseButtons.delete("left");
+    }
   } catch (error) {
     leftHeld = !nextState;
     setHoldLeftUi();
@@ -797,7 +803,7 @@ function setStreamStatus(text) {
   streamStatus.textContent = text;
 }
 
-async function stopViewingStream({ notify = true } = {}) {
+async function stopViewingStream({ notify = true, status = "stopped" } = {}) {
   if (streamPeer) {
     streamPeer.close();
     streamPeer = null;
@@ -811,7 +817,7 @@ async function stopViewingStream({ notify = true } = {}) {
   remoteStream.srcObject = null;
   connectStream.disabled = false;
   stopStream.disabled = true;
-  setStreamStatus("stopped");
+  setStreamStatus(status);
 
   if (notify) {
     await api("/api/stream/stop-viewer").catch(() => {});
@@ -853,8 +859,7 @@ async function connectToStream() {
     setStreamStatus("connecting");
   } catch (error) {
     console.error(error);
-    setStreamStatus(error.message);
-    await stopViewingStream({ notify: false });
+    await stopViewingStream({ notify: false, status: error.message });
   }
 }
 
@@ -917,6 +922,7 @@ function startLongPress() {
     setHoldLeftUi("Dragging");
     try {
       await api("/api/mouse", { button: "left", kind: "down" });
+      pressedMouseButtons.add("left");
     } catch (error) {
       autoDrag = false;
       setHoldLeftUi();
@@ -965,6 +971,7 @@ async function releaseAutoDrag() {
   setHoldLeftUi();
   try {
     await api("/api/mouse", { button: "left", kind: "up" });
+    pressedMouseButtons.delete("left");
   } catch (error) {
     console.error(error);
   }
@@ -1010,6 +1017,30 @@ function cancelTouchpadGesture() {
   if (autoDrag) {
     void releaseAutoDrag();
   }
+}
+
+async function releaseAllMouseButtons({ keepalive = false } = {}) {
+  leftHeld = false;
+  autoDrag = false;
+  pressedMouseButtons.clear();
+  setHoldLeftUi();
+
+  if (keepalive) {
+    await fetch("/api/mouse/release-all", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: "{}",
+      keepalive: true
+    }).catch(() => {});
+    return;
+  }
+
+  await api("/api/mouse/release-all");
+}
+
+function handleControlInterruption() {
+  cancelTouchpadGesture();
+  void releaseAllMouseButtons({ keepalive: true });
 }
 
 pairForm.addEventListener("submit", async (event) => {
@@ -1129,11 +1160,11 @@ pad.addEventListener("lostpointercapture", (event) => {
   cancelTouchpadGesture();
 });
 
-window.addEventListener("blur", cancelTouchpadGesture);
+window.addEventListener("blur", handleControlInterruption);
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState !== "visible") cancelTouchpadGesture();
+  if (document.visibilityState !== "visible") handleControlInterruption();
 });
-window.addEventListener("pagehide", cancelTouchpadGesture);
+window.addEventListener("pagehide", handleControlInterruption);
 
 document.querySelectorAll("[data-click]").forEach((button) => {
   button.addEventListener("click", async () => {
@@ -1147,17 +1178,22 @@ document.querySelectorAll("[data-mouse-button]").forEach((button) => {
   let commandQueue = Promise.resolve();
 
   const sendMouse = (kind) => {
-    commandQueue = commandQueue
-      .then(() => api("/api/mouse", { button: mouseButton, kind }))
-      .catch((error) => console.error(error));
-    return commandQueue;
+    const command = commandQueue.then(() => api("/api/mouse", { button: mouseButton, kind }));
+    commandQueue = command.catch(() => {});
+    return command;
   };
 
   const release = async () => {
     if (!pressed) return;
     pressed = false;
     button.classList.remove("active");
-    await sendMouse("up");
+    try {
+      await sendMouse("up");
+    } catch (error) {
+      console.error(error);
+    } finally {
+      pressedMouseButtons.delete(mouseButton);
+    }
   };
 
   button.addEventListener("pointerdown", async (event) => {
@@ -1166,7 +1202,14 @@ document.querySelectorAll("[data-mouse-button]").forEach((button) => {
     pressed = true;
     button.classList.add("active");
     button.setPointerCapture(event.pointerId);
-    await sendMouse("down");
+    try {
+      await sendMouse("down");
+      pressedMouseButtons.add(mouseButton);
+    } catch (error) {
+      pressed = false;
+      button.classList.remove("active");
+      console.error(error);
+    }
   });
 
   button.addEventListener("pointerup", (event) => {
@@ -1211,12 +1254,7 @@ saveShortcuts.addEventListener("click", () => {
 });
 
 panic.addEventListener("click", async () => {
-  await releaseAutoDrag();
-  if (leftHeld) {
-    leftHeld = false;
-    setHoldLeftUi();
-    await api("/api/mouse", { button: "left", kind: "up" });
-  }
+  await releaseAllMouseButtons();
 });
 
 searchForm.addEventListener("submit", async (event) => {

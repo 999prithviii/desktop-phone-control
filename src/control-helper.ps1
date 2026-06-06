@@ -165,26 +165,47 @@ function Send-Shortcut {
 function Send-Text {
   param([string] $Text)
 
-  $previous = $null
-  $hasPrevious = $false
+  $previous = New-Object System.Windows.Forms.DataObject
+  $clipboardCaptured = $false
+  $previousFormatCount = 0
   try {
-    $previous = [System.Windows.Forms.Clipboard]::GetText()
-    $hasPrevious = $true
+    $source = [System.Windows.Forms.Clipboard]::GetDataObject()
+    if ($null -ne $source) {
+      foreach ($format in $source.GetFormats($false)) {
+        try {
+          $data = $source.GetData($format, $false)
+          if ($null -ne $data) {
+            $previous.SetData($format, $data)
+            $previousFormatCount++
+          }
+        } catch {}
+      }
+    }
+    $clipboardCaptured = $true
   } catch {
-    $hasPrevious = $false
+    $clipboardCaptured = $false
   }
 
-  [System.Windows.Forms.Clipboard]::SetText($Text)
-  Start-Sleep -Milliseconds $CLIPBOARD_SET_DELAY_MS
-  Key-Down 0x11
-  Tap-Key 0x56
-  Key-Up 0x11
-  Start-Sleep -Milliseconds $CLIPBOARD_RESTORE_DELAY_MS
-
-  if ($hasPrevious) {
+  try {
+    [System.Windows.Forms.Clipboard]::SetText($Text)
+    Start-Sleep -Milliseconds $CLIPBOARD_SET_DELAY_MS
+    Key-Down 0x11
     try {
-      [System.Windows.Forms.Clipboard]::SetText($previous)
-    } catch {}
+      Tap-Key 0x56
+    } finally {
+      Key-Up 0x11
+    }
+    Start-Sleep -Milliseconds $CLIPBOARD_RESTORE_DELAY_MS
+  } finally {
+    if ($clipboardCaptured) {
+      try {
+        if ($previousFormatCount -gt 0) {
+          [System.Windows.Forms.Clipboard]::SetDataObject($previous, $true)
+        } else {
+          [System.Windows.Forms.Clipboard]::Clear()
+        }
+      } catch {}
+    }
   }
 }
 

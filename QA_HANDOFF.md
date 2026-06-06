@@ -5,7 +5,7 @@ This file explains the latest QA issue, what changed, and how another tester or 
 ## Current State
 
 - Project status: pre-release alpha
-- Current version: `v0.1.28`
+- Current version: `v0.1.29`
 - Source repo should remain private.
 - Recommended Windows startup command is:
 
@@ -70,6 +70,18 @@ The backend now uses a small HTTP error path so expected validation failures do 
 - Cancelled/lost pointer events now reset the touchpad gesture state.
 - Page blur, hidden-tab, and page-unload events now clear pending touchpad state.
 - New primary touches clear stale pointers from interrupted gestures.
+
+## Fixes Applied In v0.1.29
+
+- Pairing failures are throttled per device.
+- Held mouse buttons are released on interruption, panic, and normal server shutdown.
+- Encoded static-file traversal is blocked with a real path-boundary check.
+- Multi-file drops validate before writing and roll back partial writes.
+- Temporary paste-based typing preserves available non-text clipboard formats.
+- Stream errors stay visible after cleanup.
+- Sender answer polling stops cleanly when the stream is closed.
+- Token-bearing URLs are not stored in the service-worker cache.
+- PWA documentation now states that full installation requires HTTPS outside localhost.
 
 ## Verification Steps
 

@@ -19,6 +19,7 @@ This app controls your mouse and keyboard. Treat it as high-risk local tooling.
 
 - Proprietary license and private-source launch posture.
 - Random pairing code on every server start.
+- Per-device throttling for repeated wrong pairing codes.
 - Random session token stored as an HTTP-only cookie.
 - API actions require pairing.
 - Basic same-origin checks.
@@ -27,6 +28,8 @@ This app controls your mouse and keyboard. Treat it as high-risk local tooling.
 - No shell command execution from the phone.
 - Custom shortcuts are limited to allowlisted key combinations.
 - Saved shortcut data is local and gitignored.
+- Static files are restricted to the public asset directory.
+- File drops validate the complete request before writing.
 - Screen streaming uses browser WebRTC screen sharing.
 - Screen frames are not written to disk by this app.
 - The server stores only temporary WebRTC offer/answer metadata in memory.
@@ -38,7 +41,8 @@ This app controls your mouse and keyboard. Treat it as high-risk local tooling.
 - Pairing code can be used by another device on the same network while the server is running.
 - The stream sender URL printed in the terminal can start a screen-sharing session if opened on the laptop.
 - The desktop `?admin=...` URL printed in the terminal can edit phone shortcut buttons while the server is running.
-- Text typing uses the Windows clipboard temporarily, then attempts to restore the old clipboard text.
+- Text typing uses the Windows clipboard temporarily, then attempts to restore the available clipboard formats.
+- The LAN controller uses HTTP; full service-worker/PWA behavior requires HTTPS outside localhost.
 - No per-device revoke yet.
 
 ## Safer Future Version

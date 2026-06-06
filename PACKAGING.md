@@ -7,7 +7,7 @@ This project is two apps:
 
 ## Current App Mode
 
-The phone app is now installable as a PWA.
+The phone app is a browser controller with a web app manifest.
 
 Run the desktop server:
 
@@ -22,13 +22,15 @@ On Android Chrome:
 
 1. Open the LAN URL.
 2. Tap the three-dot menu.
-3. Tap `Add to Home screen` or `Install app`.
+3. Tap `Add to Home screen`.
 
 On iPhone Safari:
 
 1. Open the LAN URL.
 2. Tap Share.
 3. Tap `Add to Home Screen`.
+
+The current LAN URL is plain HTTP. A full service-worker-backed PWA requires HTTPS outside localhost. Until local HTTPS is added, home-screen behavior depends on the phone/browser and may be a shortcut rather than an offline-capable install.
 
 ## Windows Launcher
 
