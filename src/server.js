@@ -13,6 +13,7 @@ const publicDir = path.join(rootDir, "public");
 const dataDir = path.join(rootDir, "data");
 const dropboxDir = path.join(dataDir, "dropbox");
 const shortcutsPath = path.join(dataDir, "shortcuts.json");
+const runtimePath = path.join(dataDir, "runtime.json");
 const helperPath = path.join(__dirname, "control-helper.ps1");
 
 const host = process.env.DESKCTL_HOST || "0.0.0.0";
@@ -487,6 +488,16 @@ function recordPairFailure(req) {
 
 function clearPairFailures(req) {
   pairAttempts.delete(getClientAddress(req));
+}
+
+function isProcessRunning(pid) {
+  if (!pid || !Number.isInteger(pid)) return false;
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function assertSameOrigin(req) {
@@ -1121,6 +1132,27 @@ function openLocalUrl(url) {
   child.unref();
 }
 
+function writeRuntimeState(state) {
+  fs.mkdirSync(dataDir, { recursive: true });
+  fs.writeFileSync(runtimePath, `${JSON.stringify(state, null, 2)}\n`, "utf8");
+}
+
+function readRuntimeState() {
+  try {
+    return JSON.parse(fs.readFileSync(runtimePath, "utf8"));
+  } catch {
+    return null;
+  }
+}
+
+function openRunningDashboard() {
+  const state = readRuntimeState();
+  if (!state || !isProcessRunning(Number(state.pid)) || !state.setupUrl) return false;
+  openLocalUrl(state.setupUrl);
+  console.log(`Desktop Phone Control is already running. Opened dashboard: ${state.setupUrl}`);
+  return true;
+}
+
 const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
@@ -1136,6 +1168,11 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.on("error", (error) => {
+  if (error.code === "EADDRINUSE" && openRunningDashboard()) {
+    helper.child?.kill();
+    process.exit(0);
+    return;
+  }
   console.error(`Desktop Phone Control failed to start: ${error.message}`);
   helper.child?.kill();
   process.exitCode = 1;
@@ -1148,6 +1185,17 @@ server.on("connection", (socket) => {
 server.listen(port, host, () => {
   const urls = getLanUrls();
   const setupUrl = `http://127.0.0.1:${port}/setup.html?token=${setupKey}`;
+  const adminUrl = `http://127.0.0.1:${port}/?admin=${adminKey}`;
+  const senderUrl = `http://127.0.0.1:${port}/sender.html?token=${streamKey}`;
+  writeRuntimeState({
+    pid: process.pid,
+    startedAt: new Date().toISOString(),
+    port,
+    setupUrl,
+    adminUrl,
+    senderUrl,
+    phoneUrls: urls
+  });
   console.log("");
   console.log("Desktop Phone Control");
   console.log("=====================");
@@ -1160,10 +1208,10 @@ server.listen(port, host, () => {
   for (const url of urls) console.log(`  ${url}`);
   console.log("");
   console.log("To edit phone shortcuts, open this on the laptop:");
-  console.log(`  http://127.0.0.1:${port}/?admin=${adminKey}`);
+  console.log(`  ${adminUrl}`);
   console.log("");
   console.log("To stream your screen, open this on the laptop:");
-  console.log(`  http://127.0.0.1:${port}/sender.html?token=${streamKey}`);
+  console.log(`  ${senderUrl}`);
   console.log("");
   console.log("Security: trusted local Wi-Fi only. Press Ctrl+C to stop.");
   console.log("");
