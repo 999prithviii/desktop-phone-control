@@ -1,4 +1,4 @@
-$ProjectRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
+$ProjectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $ShortcutPath = Join-Path ([Environment]::GetFolderPath("Desktop")) "Desktop Phone Control.lnk"
 $TargetPath = Join-Path $ProjectRoot "start-desktop-control.cmd"
 
@@ -10,4 +10,3 @@ $Shortcut.Description = "Start Desktop Phone Control"
 $Shortcut.Save()
 
 Write-Host "Created shortcut: $ShortcutPath"
-
