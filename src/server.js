@@ -17,10 +17,11 @@ const helperPath = path.join(__dirname, "control-helper.ps1");
 
 const host = process.env.DESKCTL_HOST || "0.0.0.0";
 const port = Number(process.env.DESKCTL_PORT || "8789");
-const sessionToken = crypto.randomBytes(32).toString("hex");
+let sessionToken = crypto.randomBytes(32).toString("hex");
 const pairCode = String(crypto.randomInt(100000, 999999));
 const streamKey = crypto.randomBytes(18).toString("base64url");
 const adminKey = crypto.randomBytes(18).toString("base64url");
+const setupKey = crypto.randomBytes(18).toString("base64url");
 const streamSession = {
   offer: null,
   answer: null,
@@ -32,7 +33,24 @@ const MAX_DROP_FILE_BYTES = 8 * 1024 * 1024;
 const MAX_DROP_TOTAL_BYTES = 16 * 1024 * 1024;
 const PAIR_ATTEMPT_LIMIT = 3;
 const PAIR_ATTEMPT_WINDOW_MS = 5 * 60 * 1000;
+const PAIR_TOKEN_TTL_MS = 5 * 60 * 1000;
+const HEARTBEAT_TIMEOUT_MS = 30 * 1000;
 const pairAttempts = new Map();
+let activePairToken = null;
+const connectedDevice = {
+  connected: false,
+  address: "",
+  userAgent: "",
+  pairedAt: 0,
+  lastSeenAt: 0
+};
+const trustedDevice = {
+  token: "",
+  address: "",
+  userAgent: "",
+  pairedAt: 0,
+  lastSeenAt: 0
+};
 
 class HttpError extends Error {
   constructor(status, message) {
@@ -277,6 +295,140 @@ function getLanUrls() {
   return urls;
 }
 
+function getPreferredLanUrl() {
+  return getLanUrls()[0] || `http://127.0.0.1:${port}`;
+}
+
+function getLocalUrl(pathname) {
+  return `http://127.0.0.1:${port}${pathname}`;
+}
+
+function createPairToken() {
+  const now = Date.now();
+  activePairToken = {
+    value: crypto.randomBytes(24).toString("base64url"),
+    createdAt: now,
+    expiresAt: now + PAIR_TOKEN_TTL_MS,
+    usedAt: 0
+  };
+  return activePairToken;
+}
+
+function getActivePairToken() {
+  if (!activePairToken || Date.now() >= activePairToken.expiresAt || activePairToken.usedAt) {
+    return createPairToken();
+  }
+  return activePairToken;
+}
+
+function getPairTokenStatus() {
+  const token = getActivePairToken();
+  const phoneUrl = new URL(getPreferredLanUrl());
+  phoneUrl.searchParams.set("pairToken", token.value);
+  return {
+    url: phoneUrl.toString(),
+    expiresAt: token.expiresAt,
+    expiresIn: Math.max(0, Math.ceil((token.expiresAt - Date.now()) / 1000))
+  };
+}
+
+function isPairTokenValid(value) {
+  return (
+    activePairToken &&
+    !activePairToken.usedAt &&
+    Date.now() < activePairToken.expiresAt &&
+    String(value || "") === activePairToken.value
+  );
+}
+
+function rotateSession() {
+  sessionToken = crypto.randomBytes(32).toString("hex");
+  return sessionToken;
+}
+
+function createCookie(name, value, options = "") {
+  return `${name}=${encodeURIComponent(value)}; HttpOnly; SameSite=Strict; Path=/${options ? `; ${options}` : ""}`;
+}
+
+function markConnected(req) {
+  const now = Date.now();
+  connectedDevice.connected = true;
+  connectedDevice.address = getClientAddress(req);
+  connectedDevice.userAgent = String(req.headers["user-agent"] || "").slice(0, 160);
+  connectedDevice.pairedAt = now;
+  connectedDevice.lastSeenAt = now;
+}
+
+function trustConnectedDevice(req) {
+  const now = Date.now();
+  trustedDevice.token = crypto.randomBytes(32).toString("base64url");
+  trustedDevice.address = getClientAddress(req);
+  trustedDevice.userAgent = String(req.headers["user-agent"] || "").slice(0, 160);
+  trustedDevice.pairedAt = now;
+  trustedDevice.lastSeenAt = now;
+  return trustedDevice.token;
+}
+
+function clearTrustedDevice() {
+  trustedDevice.token = "";
+  trustedDevice.address = "";
+  trustedDevice.userAgent = "";
+  trustedDevice.pairedAt = 0;
+  trustedDevice.lastSeenAt = 0;
+}
+
+function markDisconnected() {
+  connectedDevice.connected = false;
+  connectedDevice.lastSeenAt = 0;
+  createPairToken();
+}
+
+function refreshConnectionState() {
+  if (connectedDevice.connected && Date.now() - connectedDevice.lastSeenAt > HEARTBEAT_TIMEOUT_MS) {
+    markDisconnected();
+  }
+}
+
+function getConnectionStatus() {
+  refreshConnectionState();
+  const trusted = Boolean(trustedDevice.token);
+  return {
+    connected: connectedDevice.connected,
+    address: connectedDevice.connected ? connectedDevice.address : "",
+    pairedAt: connectedDevice.connected ? connectedDevice.pairedAt : 0,
+    lastSeenAt: connectedDevice.connected ? connectedDevice.lastSeenAt : 0,
+    heartbeatTimeoutSeconds: HEARTBEAT_TIMEOUT_MS / 1000,
+    trusted,
+    inactiveTrusted: trusted && !connectedDevice.connected,
+    trustedAddress: trusted && !connectedDevice.connected ? trustedDevice.address : "",
+    trustedLastSeenAt: trusted ? trustedDevice.lastSeenAt : 0
+  };
+}
+
+function hasSetupKey(body) {
+  return String(body.token || "") === setupKey;
+}
+
+function setSessionCookie(res, reconnectToken = "") {
+  const cookies = [createCookie("deskctl", rotateSession())];
+  if (reconnectToken) cookies.push(createCookie("deskctl_reconnect", reconnectToken));
+  res.setHeader("set-cookie", cookies);
+}
+
+function clearSessionCookie(res) {
+  res.setHeader("set-cookie", [
+    createCookie("deskctl", "", "Max-Age=0"),
+    createCookie("deskctl_reconnect", "", "Max-Age=0")
+  ]);
+}
+
+async function releaseAllMouseButtons() {
+  await Promise.allSettled([
+    helper.send("mouse", { button: "left", kind: "up" }),
+    helper.send("mouse", { button: "right", kind: "up" })
+  ]);
+}
+
 function sendJson(res, status, value) {
   const body = JSON.stringify(value);
   res.writeHead(status, {
@@ -298,7 +450,8 @@ function parseCookies(header) {
 }
 
 function isAuthorized(req) {
-  return parseCookies(req.headers.cookie).get("deskctl") === sessionToken;
+  refreshConnectionState();
+  return connectedDevice.connected && parseCookies(req.headers.cookie).get("deskctl") === sessionToken;
 }
 
 function getClientAddress(req) {
@@ -561,7 +714,7 @@ async function handleApi(req, res, pathname) {
   }
 
   if (pathname === "/api/status") {
-    sendJson(res, 200, { ok: true, paired: isAuthorized(req) });
+    sendJson(res, 200, { ok: true, paired: isAuthorized(req), connection: getConnectionStatus() });
     return;
   }
 
@@ -576,10 +729,55 @@ async function handleApi(req, res, pathname) {
       ? MAX_DROP_TOTAL_BYTES * 2
       : pathname === "/api/clipboard/set"
         ? MAX_CLIPBOARD_TEXT_LENGTH + 1024
-      : pathname.startsWith("/api/stream/") || pathname.startsWith("/api/admin/")
+      : pathname.startsWith("/api/stream/") || pathname.startsWith("/api/admin/") || pathname.startsWith("/api/setup/")
         ? 65536
         : 4096
   );
+
+  if (pathname === "/api/setup/info") {
+    if (!hasSetupKey(body)) {
+      sendJson(res, 403, { ok: false, error: "bad setup token" });
+      return;
+    }
+
+    const connection = getConnectionStatus();
+    const tokenStatus = connection.connected ? { url: "", expiresAt: 0, expiresIn: 0 } : getPairTokenStatus();
+    sendJson(res, 200, {
+      ok: true,
+      pairCode,
+      lanUrls: getLanUrls(),
+      preferredPhoneUrl: getPreferredLanUrl(),
+      senderUrl: getLocalUrl(`/sender.html?token=${streamKey}`),
+      pairTokenUrl: tokenStatus.url,
+      pairTokenExpiresAt: tokenStatus.expiresAt,
+      pairTokenExpiresIn: tokenStatus.expiresIn,
+      connection
+    });
+    return;
+  }
+
+  if (pathname === "/api/setup/regenerate") {
+    if (!hasSetupKey(body)) {
+      sendJson(res, 403, { ok: false, error: "bad setup token" });
+      return;
+    }
+
+    if (getConnectionStatus().connected) {
+      sendJson(res, 409, { ok: false, error: "phone already connected" });
+      return;
+    }
+
+    createPairToken();
+    const tokenStatus = getPairTokenStatus();
+    sendJson(res, 200, {
+      ok: true,
+      pairTokenUrl: tokenStatus.url,
+      pairTokenExpiresAt: tokenStatus.expiresAt,
+      pairTokenExpiresIn: tokenStatus.expiresIn,
+      connection: getConnectionStatus()
+    });
+    return;
+  }
 
   if (pathname === "/api/stream/publish-offer") {
     if (!hasStreamKey(body)) {
@@ -657,17 +855,67 @@ async function handleApi(req, res, pathname) {
     }
 
     clearPairFailures(req);
-    res.writeHead(200, {
-      "content-type": "application/json; charset=utf-8",
-      "set-cookie": `deskctl=${encodeURIComponent(sessionToken)}; HttpOnly; SameSite=Strict; Path=/`,
-      "cache-control": "no-store"
-    });
-    res.end(JSON.stringify({ ok: true }));
+    if (activePairToken && !activePairToken.usedAt) activePairToken.usedAt = Date.now();
+    markConnected(req);
+    setSessionCookie(res, trustConnectedDevice(req));
+    sendJson(res, 200, { ok: true });
+    return;
+  }
+
+  if (pathname === "/api/pair-token") {
+    if (getConnectionStatus().connected) {
+      sendJson(res, 409, { ok: false, error: "phone already connected" });
+      return;
+    }
+
+    if (!isPairTokenValid(body.token)) {
+      sendJson(res, 410, { ok: false, error: "pairing QR expired or already used" });
+      return;
+    }
+
+    activePairToken.usedAt = Date.now();
+    clearPairFailures(req);
+    markConnected(req);
+    setSessionCookie(res, trustConnectedDevice(req));
+    sendJson(res, 200, { ok: true });
+    return;
+  }
+
+  if (pathname === "/api/reconnect") {
+    const reconnectToken = parseCookies(req.headers.cookie).get("deskctl_reconnect") || "";
+    if (!trustedDevice.token || reconnectToken !== trustedDevice.token) {
+      sendJson(res, 401, { ok: false, error: "reconnect unavailable" });
+      return;
+    }
+
+    markConnected(req);
+    trustedDevice.address = getClientAddress(req);
+    trustedDevice.userAgent = String(req.headers["user-agent"] || "").slice(0, 160);
+    trustedDevice.lastSeenAt = Date.now();
+    setSessionCookie(res);
+    sendJson(res, 200, { ok: true, connection: getConnectionStatus() });
     return;
   }
 
   if (!isAuthorized(req)) {
     sendJson(res, 401, { ok: false, error: "not paired" });
+    return;
+  }
+
+  if (pathname === "/api/heartbeat") {
+    connectedDevice.lastSeenAt = Date.now();
+    if (trustedDevice.token) trustedDevice.lastSeenAt = connectedDevice.lastSeenAt;
+    sendJson(res, 200, { ok: true, connection: getConnectionStatus() });
+    return;
+  }
+
+  if (pathname === "/api/disconnect") {
+    await releaseAllMouseButtons();
+    rotateSession();
+    clearTrustedDevice();
+    markDisconnected();
+    clearSessionCookie(res);
+    sendJson(res, 200, { ok: true });
     return;
   }
 
@@ -751,10 +999,7 @@ async function handleApi(req, res, pathname) {
   }
 
   if (pathname === "/api/mouse/release-all") {
-    await Promise.allSettled([
-      helper.send("mouse", { button: "left", kind: "up" }),
-      helper.send("mouse", { button: "right", kind: "up" })
-    ]);
+    await releaseAllMouseButtons();
     sendJson(res, 200, { ok: true });
     return;
   }
@@ -858,6 +1103,24 @@ function serveStatic(req, res, pathname) {
   });
 }
 
+function openLocalUrl(url) {
+  if (process.env.DESKCTL_NO_OPEN === "1") return;
+  const child = spawn("powershell.exe", [
+    "-NoProfile",
+    "-ExecutionPolicy",
+    "Bypass",
+    "-Command",
+    "Start-Process -FilePath $args[0]",
+    url
+  ], {
+    stdio: "ignore",
+    windowsHide: true,
+    detached: true
+  });
+  child.on("error", () => {});
+  child.unref();
+}
+
 const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
@@ -884,10 +1147,14 @@ server.on("connection", (socket) => {
 
 server.listen(port, host, () => {
   const urls = getLanUrls();
+  const setupUrl = `http://127.0.0.1:${port}/setup.html?token=${setupKey}`;
   console.log("");
   console.log("Desktop Phone Control");
   console.log("=====================");
   console.log(`Pairing code: ${pairCode}`);
+  console.log("");
+  console.log("Connect dashboard:");
+  console.log(`  ${setupUrl}`);
   console.log("");
   console.log("Open one of these on your phone:");
   for (const url of urls) console.log(`  ${url}`);
@@ -900,6 +1167,7 @@ server.listen(port, host, () => {
   console.log("");
   console.log("Security: trusted local Wi-Fi only. Press Ctrl+C to stop.");
   console.log("");
+  openLocalUrl(setupUrl);
 });
 
 let shuttingDown = false;
@@ -908,10 +1176,7 @@ async function shutdown() {
   if (shuttingDown) return;
   shuttingDown = true;
 
-  await Promise.allSettled([
-    helper.send("mouse", { button: "left", kind: "up" }),
-    helper.send("mouse", { button: "right", kind: "up" })
-  ]);
+  await releaseAllMouseButtons();
   helper.child?.kill();
   server.close(() => process.exit(0));
   setTimeout(() => process.exit(0), 1000).unref();

@@ -18,6 +18,15 @@ npm.cmd start
 
 Open the printed LAN URL on your phone.
 
+The easier connection path is:
+
+1. Double-click `start-desktop-control.cmd`.
+2. Use the Connect dashboard that opens on the PC.
+3. Scan the single-use QR code from the phone.
+4. Add the paired phone controller to the home screen.
+
+The QR code expires after a few minutes and cannot be reused after a successful pairing. If it fails, click `Generate New QR` on the PC.
+
 On Android Chrome:
 
 1. Open the LAN URL.
@@ -44,6 +53,12 @@ Optional desktop shortcut:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\create-desktop-shortcut.ps1
+```
+
+Easiest shortcut installer:
+
+```text
+install-desktop-shortcut.cmd
 ```
 
 ## Real Windows App Path

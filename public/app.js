@@ -5,6 +5,7 @@ const pairCode = document.querySelector("#pairCode");
 const pairError = document.querySelector("#pairError");
 const pad = document.querySelector("#pad");
 const panic = document.querySelector("#panic");
+const disconnect = document.querySelector("#disconnect");
 const themeToggle = document.querySelector("#themeToggle");
 const accentSelect = document.querySelector("#accentSelect");
 const remoteStream = document.querySelector("#remoteStream");
@@ -43,17 +44,22 @@ let longPressTimer = null;
 let streamPeer = null;
 let remoteMediaStream = null;
 let shortcutPollTimer = null;
+let heartbeatTimer = null;
 let customShortcuts = [];
 let editableShortcuts = [];
 let shortcutTrayOrder = [];
 let openTrayId = "";
 let trayDrag = null;
-const adminToken = new URL(location.href).searchParams.get("admin") || "";
+const pageUrl = new URL(location.href);
+const adminToken = pageUrl.searchParams.get("admin") || "";
+const pairToken = pageUrl.searchParams.get("pairToken") || "";
 
 const DEFAULT_MOVE_SPEED = 2.6;
 const SCROLL_SPEED = 12;
 const TAP_MAX_MS = 280;
 const TAP_MAX_DISTANCE = 14;
+const DOUBLE_TAP_ZOOM_MAX_MS = 320;
+const DOUBLE_TAP_ZOOM_MAX_DISTANCE = 32;
 const LONG_PRESS_MS = 450;
 const LONG_PRESS_MOVE_LIMIT = 10;
 const TRAY_ORDER_KEY = "deskctl:shortcutTrayOrder";
@@ -63,6 +69,7 @@ const BUILT_IN_SHORTCUT_IDS = new Set(["address-bar", "copy", "paste", "save", "
 const MAX_DROP_FILES = 5;
 const MAX_DROP_FILE_BYTES = 8 * 1024 * 1024;
 const MAX_DROP_TOTAL_BYTES = 16 * 1024 * 1024;
+const HEARTBEAT_INTERVAL_MS = 10000;
 
 const trayPresets = [
   {
@@ -650,6 +657,7 @@ function showControls() {
   controlPanel.classList.remove("hidden");
   renderShortcutDeck();
   void loadPhoneShortcuts();
+  startHeartbeat();
   if (!shortcutPollTimer) {
     shortcutPollTimer = setInterval(() => {
       void loadPhoneShortcuts();
@@ -658,6 +666,35 @@ function showControls() {
   if (adminToken) {
     void loadEditableShortcuts();
   }
+}
+
+function showPairing(message = "") {
+  isPaired = false;
+  pairPanel.classList.remove("hidden");
+  controlPanel.classList.add("hidden");
+  pairError.textContent = message;
+  stopHeartbeat();
+  if (shortcutPollTimer) {
+    clearInterval(shortcutPollTimer);
+    shortcutPollTimer = null;
+  }
+}
+
+function startHeartbeat() {
+  if (adminToken || heartbeatTimer) return;
+  heartbeatTimer = setInterval(() => {
+    api("/api/heartbeat").catch((error) => {
+      console.error(error);
+      showPairing("connection paused; reopen to reconnect or scan a fresh QR");
+    });
+  }, HEARTBEAT_INTERVAL_MS);
+  void api("/api/heartbeat").catch(() => {});
+}
+
+function stopHeartbeat() {
+  if (!heartbeatTimer) return;
+  clearInterval(heartbeatTimer);
+  heartbeatTimer = null;
 }
 
 function renderPhoneShortcuts(shortcuts) {
@@ -1013,6 +1050,10 @@ function cancelTouchpadGesture() {
   pendingDx = 0;
   pendingDy = 0;
   pendingScrollAmount = 0;
+  if (moveFrame) {
+    cancelAnimationFrame(moveFrame);
+    moveFrame = 0;
+  }
 
   if (autoDrag) {
     void releaseAutoDrag();
@@ -1043,6 +1084,46 @@ function handleControlInterruption() {
   void releaseAllMouseButtons({ keepalive: true });
 }
 
+function isEditableElement(target) {
+  return target instanceof Element && Boolean(target.closest("input, textarea, select, [contenteditable='true']"));
+}
+
+function installMobileZoomGuard() {
+  let lastTapAt = 0;
+  let lastTapX = 0;
+  let lastTapY = 0;
+
+  document.addEventListener("dblclick", (event) => {
+    if (isEditableElement(event.target)) return;
+    event.preventDefault();
+  }, { capture: true });
+
+  document.addEventListener("touchend", (event) => {
+    if (event.touches.length || event.changedTouches.length !== 1 || isEditableElement(event.target)) {
+      lastTapAt = 0;
+      return;
+    }
+
+    const touch = event.changedTouches[0];
+    const now = performance.now();
+    const isNearLastTap = Math.hypot(touch.clientX - lastTapX, touch.clientY - lastTapY) <= DOUBLE_TAP_ZOOM_MAX_DISTANCE;
+    if (now - lastTapAt <= DOUBLE_TAP_ZOOM_MAX_MS && isNearLastTap) {
+      event.preventDefault();
+      lastTapAt = 0;
+      return;
+    }
+
+    lastTapAt = now;
+    lastTapX = touch.clientX;
+    lastTapY = touch.clientY;
+  }, { capture: true, passive: false });
+
+  document.addEventListener("gesturestart", (event) => {
+    if (isEditableElement(event.target)) return;
+    event.preventDefault();
+  }, { passive: false });
+}
+
 pairForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   pairError.textContent = "";
@@ -1053,6 +1134,21 @@ pairForm.addEventListener("submit", async (event) => {
     pairError.textContent = error.message;
   }
 });
+
+async function pairWithToken(token) {
+  pairError.textContent = "pairing from QR";
+  try {
+    await api("/api/pair-token", { token });
+    pageUrl.searchParams.delete("pairToken");
+    history.replaceState(null, "", `${pageUrl.pathname}${pageUrl.search}${pageUrl.hash}`);
+    pairError.textContent = "";
+    showControls();
+  } catch (error) {
+    pageUrl.searchParams.delete("pairToken");
+    history.replaceState(null, "", `${pageUrl.pathname}${pageUrl.search}${pageUrl.hash}`);
+    showPairing(error.message);
+  }
+}
 
 if (adminToken) {
   showControls();
@@ -1071,6 +1167,7 @@ updateSensitivityLabel();
 sensitivity.addEventListener("input", updateSensitivityLabel);
 
 applyDisplaySettings();
+installMobileZoomGuard();
 
 themeToggle.addEventListener("click", () => {
   const nextTheme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
@@ -1257,6 +1354,20 @@ panic.addEventListener("click", async () => {
   await releaseAllMouseButtons();
 });
 
+disconnect.addEventListener("click", async () => {
+  disconnect.disabled = true;
+  try {
+    await api("/api/disconnect");
+  } catch (error) {
+    console.error(error);
+  } finally {
+    stopHeartbeat();
+    await releaseAllMouseButtons({ keepalive: true });
+    showPairing("disconnected; scan a fresh QR to reconnect");
+    disconnect.disabled = false;
+  }
+});
+
 searchForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const text = searchText.value.trim();
@@ -1273,11 +1384,30 @@ typeForm.addEventListener("submit", async (event) => {
   typeText.value = "";
 });
 
-api("/api/status")
-  .then((status) => {
-    if (status.paired) showControls();
-  })
-  .catch(() => {});
+async function initializeConnection() {
+  if (adminToken) return;
+  if (pairToken) {
+    await pairWithToken(pairToken);
+    return;
+  }
+
+  try {
+    const status = await api("/api/status");
+    if (status.paired) {
+      showControls();
+      return;
+    }
+  } catch {}
+
+  try {
+    await api("/api/reconnect");
+    showControls();
+  } catch {
+    showPairing();
+  }
+}
+
+void initializeConnection();
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {

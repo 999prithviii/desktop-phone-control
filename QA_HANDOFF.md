@@ -5,7 +5,7 @@ This file explains the latest QA issue, what changed, and how another tester or 
 ## Current State
 
 - Project status: pre-release alpha
-- Current version: `v0.1.30`
+- Current version: `v0.2.0`
 - Source repo should remain private.
 - Recommended Windows startup command is:
 
@@ -89,6 +89,19 @@ The backend now uses a small HTTP error path so expected validation failures do 
 - After the third failure, further pairing requests return `429`.
 - The lockout clears when the oldest failure falls outside the five-minute window.
 
+## Fixes Applied In v0.2.0
+
+- PC startup opens a private Connect dashboard with a single-use QR code.
+- QR pairing uses an expiring one-time token and leaves numeric pairing as fallback.
+- The phone sends heartbeat pings while paired.
+- The phone has a visible Disconnect button that clears the session and releases held mouse buttons.
+- The previously paired phone can auto-reconnect during the same server run after inactivity.
+- Intentional Disconnect revokes reconnect trust and requires scanning again.
+- The setup dashboard can generate a new QR after disconnect or QR failure.
+- The setup dashboard includes Share Screen and copy sender link actions.
+- Mobile controller double taps no longer zoom the whole browser UI.
+- Token-bearing URLs remain excluded from service-worker caching.
+
 ## Verification Steps
 
 Start the app:
@@ -106,6 +119,12 @@ Then verify:
 5. Move the sensitivity slider, refresh, and confirm the saved value persists.
 6. Open the printed admin URL and confirm shortcut editing still loads.
 7. Open the printed sender URL and confirm it shows idle state before screen sharing.
+8. Open the printed Connect dashboard URL and confirm the QR, link, code, and Generate New QR controls render.
+9. Open the QR phone link once and confirm it auto-pairs.
+10. Reopen the same QR phone link in a fresh browser context and confirm it fails as expired or already used.
+11. Tap Disconnect on the phone and confirm a fresh QR becomes available on the Connect dashboard.
+12. Pair again, stop heartbeat by closing the phone tab, wait past 30 seconds, then reopen the normal phone URL and confirm it auto-reconnects.
+13. Tap Disconnect, reopen the normal phone URL, and confirm it does not auto-reconnect.
 
 ## Safe API Checks
 
@@ -118,6 +137,11 @@ These checks should not move the mouse, type, change clipboard, or affect the de
 - `POST /api/stream/status` after pairing
 - `POST /api/admin/shortcuts/list` with bad token
 - `POST /api/admin/shortcuts/list` with valid token
+- `POST /api/setup/info` with bad token
+- `POST /api/setup/info` with valid token
+- `POST /api/setup/regenerate` with valid token while disconnected
+- `POST /api/pair-token` with used or expired token
+- `POST /api/reconnect` before and after trusted pairing
 
 Expected client error behavior:
 

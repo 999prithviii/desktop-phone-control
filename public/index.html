@@ -13,7 +13,8 @@
     <link rel="stylesheet" href="/styles.css">
   </head>
   <body>
-    <main class="shell">
+    <a class="skip-link" href="#main">Skip to main content</a>
+    <main id="main" class="shell">
       <section id="pairPanel" class="panel">
         <h1>Desktop Control</h1>
         <p>Enter the pairing code shown on your laptop.</p>
@@ -30,7 +31,10 @@
             <strong>Desktop Control</strong>
             <span id="status">paired</span>
           </div>
-          <button id="panic" class="danger" type="button">Release</button>
+          <section class="topbar-actions" aria-label="Connection actions">
+            <button id="disconnect" type="button">Disconnect</button>
+            <button id="panic" class="danger" type="button">Release</button>
+          </section>
         </header>
 
         <section class="theme-bar" aria-label="Display settings">
@@ -98,7 +102,7 @@
         <footer class="app-credit">
           <span>Built by Prithvi</span>
           <span>Designer &amp; Builder</span>
-          <span>v0.1.30</span>
+          <span>v0.2.0</span>
         </footer>
       </section>
     </main>

@@ -4,7 +4,7 @@ Local-first phone controller for a Windows desktop.
 
 Built by Prithvi — Designer & Builder  
 GitHub: [@999prithviii](https://github.com/999prithviii)  
-Version: `0.1.30`
+Version: `0.2.0`
 
 Community dashboard: [COMMUNITY_DASHBOARD.md](COMMUNITY_DASHBOARD.md)
 Update log: [UPDATE_LOG.md](UPDATE_LOG.md)
@@ -20,6 +20,8 @@ This MVP turns your phone browser into a touchpad and keyboard for your laptop. 
 ## Features
 
 - Pairing code printed in the desktop terminal.
+- PC Connect dashboard with a single-use QR code, copyable phone link, and Generate New QR.
+- Same-run trusted phone reconnect after inactivity, without storing devices on disk.
 - Live screen stream through browser WebRTC screen sharing.
 - Desktop shortcut manager for phone buttons.
 - Draggable accordion shortcut trays for compact app-specific controls.
@@ -105,17 +107,21 @@ The terminal will print:
 
 - a pairing code
 - one or more phone URLs
+- a private connect dashboard URL with a single-use QR code
 - a private admin URL
 - a private stream sender URL
 
 ### Step 4: Connect Your Phone
 
 1. Make sure the phone and PC are on the same Wi-Fi.
-2. On the phone, open the LAN URL printed in the terminal.
-3. Enter the pairing code.
-4. Keep the terminal open while using the app.
+2. Use the Connect dashboard that opens on the PC.
+3. Scan the QR code with your phone. The QR is single-use and expires after a few minutes.
+4. If the QR does not work, click `Generate New QR` on the PC or enter the printed pairing code manually.
+5. Keep the terminal open while using the app.
 
 Use the LAN URL, not `127.0.0.1`. `127.0.0.1` only works on the PC itself.
+
+If the phone browser closes or goes inactive, reopen the phone controller from the same phone during the same server run. The app will try to reconnect automatically. Tapping `Disconnect` intentionally revokes that trust and requires a fresh QR.
 
 ### Step 5: Common First-Run Problems
 
@@ -138,7 +144,7 @@ cd path\to\desktop-phone-control
 npm.cmd start
 ```
 
-Open the printed LAN URL on your phone, then enter the pairing code shown in the terminal.
+Use the Connect dashboard that opens on the PC, then scan the single-use QR code with your phone. If QR pairing fails, open the printed LAN URL on your phone and enter the pairing code shown in the terminal.
 
 To stream your screen:
 
@@ -178,6 +184,12 @@ On Windows, you can start it with:
 .\start-desktop-control.cmd
 ```
 
+To create a Windows desktop shortcut, double-click:
+
+```text
+install-desktop-shortcut.cmd
+```
+
 See [PACKAGING.md](PACKAGING.md) for turning this into a real `.exe` later.
 
 ## Response Timing
@@ -207,6 +219,10 @@ Defaults:
 Do not expose this app to the public internet.
 
 Use it only on trusted local Wi-Fi. Anyone on the network who gets the pairing code can control mouse and keyboard until the server restarts.
+
+QR pairing uses a short-lived, single-use token. It is safer than reusing the numeric pairing code, but it still must be treated as trusted-local-network only.
+
+Auto-reconnect uses a same-run trusted-device cookie. It does not use MAC addresses because phone browsers do not expose them.
 
 Screen streaming also requires the private sender URL printed in the terminal and Chrome's screen-share permission on the laptop.
 

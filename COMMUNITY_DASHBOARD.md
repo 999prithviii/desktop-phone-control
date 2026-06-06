@@ -6,12 +6,23 @@ No private paths, pairing codes, tokens, screenshots, or personal test data are 
 
 ## Current Build
 
-- Version: `v0.1.30`
+- Version: `v0.2.0`
 - Platform: Windows desktop control
 - Startup recommendation on Windows PowerShell: `npm.cmd start`
 - Safety rule: trusted local Wi-Fi only
 
 ## Latest QA Findings And Fixes
+
+### Fixed In v0.2.0
+
+| Area | What Was Found | What Was Fixed | Status |
+| --- | --- | --- | --- |
+| Phone connect | Manual URL/code pairing was clunky for normal testers. | Added a PC Connect dashboard with a single-use QR code, copyable link, expiry/status, and Generate New QR. | Fixed |
+| QR reuse | A scanned QR should not remain usable by someone else. | QR tokens now expire, invalidate on successful pairing, and regenerate one-at-a-time. | Fixed |
+| Reconnect | Closing the phone browser forced a fresh scan even during the same app run. | Added same-run trusted auto-reconnect using a server-issued HttpOnly cookie. | Fixed |
+| Disconnect | Intentional logout needed to be clearer and safer. | Added a phone Disconnect button that clears session/reconnect cookies, releases held mouse buttons, and creates a fresh QR. | Fixed |
+| Screen share | The desktop stream sender link was hidden in terminal output. | Added Share Screen and copy sender link actions to the Connect dashboard. | Fixed |
+| Mobile browser zoom | Fast double taps on controls could zoom the whole phone browser. | Added controller touch-action hints and a double-tap zoom guard. | Fixed |
 
 ### Fixed In v0.1.30
 

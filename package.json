@@ -1,6 +1,6 @@
 {
   "name": "desktop-phone-control",
-  "version": "0.1.30",
+  "version": "0.2.0",
   "private": true,
   "description": "Local-first phone controller for a Windows desktop.",
   "author": "Prithvi",

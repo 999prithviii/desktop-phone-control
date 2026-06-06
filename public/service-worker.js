@@ -1,13 +1,16 @@
-const CACHE_NAME = "desktop-control-v0.1.30";
+const CACHE_NAME = "desktop-control-v0.2.0";
 const ASSETS = [
   "/",
   "/index.html",
+  "/setup.html",
   "/admin.html",
   "/sender.html",
   "/styles.css",
   "/app.js",
+  "/setup.js",
   "/admin.js",
   "/sender.js",
+  "/vendor/qrcode-generator.js",
   "/manifest.webmanifest",
   "/icon.svg",
   "/art/cyan.svg",

@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0b0f14">
+    <title>Connect Desktop Control</title>
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to main content</a>
+    <main id="main" class="shell setup-shell">
+      <section class="panel setup-panel" aria-labelledby="setupTitle">
+        <header class="setup-header">
+          <div>
+            <span class="eyebrow">Desktop Phone Control</span>
+            <h1 id="setupTitle">Connect your phone</h1>
+          </div>
+          <strong id="setupState" class="setup-state">loading</strong>
+        </header>
+
+        <section class="setup-grid" aria-label="Connection options">
+          <div class="qr-card">
+            <div id="qrCode" class="qr-box" aria-live="polite"></div>
+            <p id="qrStatus" class="micro-status">Preparing QR code</p>
+          </div>
+
+          <div class="setup-copy">
+            <label for="phoneLink">Phone link</label>
+            <input id="phoneLink" readonly value="">
+            <section class="grid two">
+              <button id="copyLink" type="button">Copy Link</button>
+              <button id="regenerateQr" type="button">Generate New QR</button>
+            </section>
+
+            <label for="manualCode">Manual code</label>
+            <input id="manualCode" readonly value="">
+
+            <p id="setupHint" class="setup-hint">
+              Scan the QR from your phone. After pairing, add the controller to your home screen from the phone browser.
+            </p>
+
+            <section class="share-card" aria-labelledby="shareTitle">
+              <strong id="shareTitle">Screen sharing</strong>
+              <p class="setup-hint">Open the sender on this PC, choose a screen or window, then tap Connect Stream on the phone.</p>
+              <label for="senderLink">Private sender link</label>
+              <input id="senderLink" readonly value="">
+              <section class="grid two">
+                <button id="openSender" type="button">Share Screen</button>
+                <button id="copySender" type="button">Copy Sender Link</button>
+              </section>
+            </section>
+          </div>
+        </section>
+
+        <footer class="app-credit">
+          <span>Trusted local Wi-Fi only</span>
+          <span>v0.2.0</span>
+        </footer>
+      </section>
+    </main>
+    <script src="/vendor/qrcode-generator.js"></script>
+    <script src="/setup.js"></script>
+  </body>
+</html>

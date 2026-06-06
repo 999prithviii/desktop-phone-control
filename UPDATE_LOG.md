@@ -6,7 +6,19 @@ This log only includes product-safe public summaries. It does not include local 
 
 ## Current Version
 
-- `v0.1.30`
+- `v0.2.0`
+
+## v0.2.0 - Single-Use QR Connect
+
+- Added the PC Connect dashboard with a single-use QR code, copyable phone link, expiry/status display, Generate New QR, and Share Screen access.
+- Added guarded setup APIs using a private setup token generated on each server start.
+- Added QR token pairing with five-minute expiry, one active token, immediate invalidation after use, and manual numeric pairing as fallback.
+- Added phone heartbeat, inactivity detection, a visible Disconnect button, and safe mouse-button release on disconnect.
+- Added same-run trusted auto-reconnect using an HttpOnly reconnect cookie, without using MAC addresses or writing trusted devices to disk.
+- Added a Windows desktop shortcut installer wrapper.
+- Added local vendored QR rendering with copyable-link fallback.
+- Kept token-bearing setup, admin, sender, and pair-token URLs out of the service-worker cache.
+- Added a mobile double-tap zoom guard for the controller UI.
 
 ## v0.0.0 -> v0.1.14 - Prototype Foundation
 

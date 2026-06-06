@@ -19,6 +19,8 @@ This app controls your mouse and keyboard. Treat it as high-risk local tooling.
 
 - Proprietary license and private-source launch posture.
 - Random pairing code on every server start.
+- Short-lived, single-use QR pairing token on the private Connect dashboard.
+- Same-run trusted reconnect cookie for the previously paired phone.
 - Per-device pairing lockout after three wrong codes within five minutes. Further attempts are blocked until the five-minute window expires.
 - Random session token stored as an HTTP-only cookie.
 - API actions require pairing.
@@ -41,9 +43,11 @@ This app controls your mouse and keyboard. Treat it as high-risk local tooling.
 - Pairing code can be used by another device on the same network while the server is running.
 - The stream sender URL printed in the terminal can start a screen-sharing session if opened on the laptop.
 - The desktop `?admin=...` URL printed in the terminal can edit phone shortcut buttons while the server is running.
+- The desktop `setup.html?token=...` URL printed in the terminal can generate phone pairing QR codes while the server is running.
 - Text typing uses the Windows clipboard temporarily, then attempts to restore the available clipboard formats.
 - The LAN controller uses HTTP; full service-worker/PWA behavior requires HTTPS outside localhost.
-- No per-device revoke yet.
+- Only one active phone session is supported in the current build.
+- Browsers do not expose phone MAC addresses; reconnect trust uses a server-issued HttpOnly cookie instead.
 
 ## Safer Future Version
 
