@@ -19,27 +19,13 @@ This MVP turns your phone browser into a touchpad and keyboard for your laptop. 
 
 ## Features
 
-- Pairing code printed in the desktop terminal.
-- PC Connect dashboard with a single-use QR code, copyable phone link, and Generate New QR.
-- Same-run trusted phone reconnect after inactivity, without storing devices on disk.
-- Live screen stream through browser WebRTC screen sharing.
-- Desktop shortcut manager for phone buttons.
-- Draggable accordion shortcut trays for compact app-specific controls.
-- Clipboard and file transfer tray for daily phone-to-PC handoff.
-- Light/dark mode plus Mint, Coral, Sun, Future, Cyan, and Pink accent variants.
-- Phone touchpad for cursor movement.
-- Adjustable mouse sensitivity from `0.8x` to `5x`.
-- One-finger tap for left click.
-- Two-finger tap for right click.
-- Two-finger drag for scrolling.
-- Long-press with one finger to drag, then lift to release.
-- Left/right click.
-- Hold-left mode for dragging windows.
-- Scroll controls.
-- Text typing.
-- Browser/search helper: focus address bar, type, press Enter.
-- Common keys: Escape, Space, Enter, `F`, `F11`, media play/pause, volume.
-- Local file drop from phone to `data/dropbox/` on the PC.
+- Local Wi-Fi phone controller for Windows mouse, keyboard, scrolling, typing, and shortcuts.
+- PC Connect dashboard with a single-use QR code, manual pairing fallback, and same-run trusted reconnect.
+- Touchpad gestures for left/right click, scrolling, dragging, hold-left, and adjustable sensitivity.
+- Live screen viewing through browser WebRTC screen sharing.
+- Draggable shortcut trays for browser, media, editing, text, custom buttons, and admin-managed shortcuts.
+- Clipboard, link, and file handoff between phone and PC.
+- Light/dark mode with Mint, Coral, Sun, Future, Cyan, and Pink visual profiles.
 
 ## Beginner Startup Guide
 
