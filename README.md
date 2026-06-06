@@ -225,5 +225,5 @@ GitHub: [@999prithviii](https://github.com/999prithviii)
 
 ## Contributors
 
-- [@danielgoleman97-lab](https://github.com/danielgoleman97-lab) - QA testing
+- [@danielgoleman97-lab](https://github.com/danielgoleman97-lab) - QA testing and security review
 - [@mvzy21](https://github.com/mvzy21) - QA testing
