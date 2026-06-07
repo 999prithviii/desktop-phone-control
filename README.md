@@ -5,6 +5,7 @@ Local-first phone controller for a Windows desktop.
 Built by Prithvi — Designer & Builder  
 GitHub: [@999prithviii](https://github.com/999prithviii)  
 Version: `0.2.0`
+Badge: [![GitGem](https://gitgem.org/api/badge/github/999prithviii/desktop-phone-control.svg)](https://gitgem.org/github/999prithviii/desktop-phone-control)
 
 Community dashboard: [COMMUNITY_DASHBOARD.md](COMMUNITY_DASHBOARD.md)
 Update log: [UPDATE_LOG.md](UPDATE_LOG.md)
